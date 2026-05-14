@@ -1,0 +1,15 @@
+{
+  "appId": "com.nurlankultimov.startupapp",
+  "appName": "Qadam",
+  "webDir": "dist",
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 2000,
+      "launchAutoHide": true,
+      "backgroundColor": "#534AB7",
+      "iosSpinnerStyle": "small",
+      "spinnerColor": "#ffffff",
+      "showSpinner": false
+    }
+  }
+}

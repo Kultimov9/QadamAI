@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">startupApp</string>
+    <string name="title_activity_main">startupApp</string>
+    <string name="package_name">startup.app</string>
+    <string name="custom_url_scheme">startup.app</string>
+</resources>

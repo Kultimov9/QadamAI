@@ -1,0 +1,276 @@
+<template>
+  <div class="ai-view">
+    <h1 class="title">AI помощник</h1>
+    <p class="subtitle">Знает твои привычки и задачи</p>
+
+    <div class="messages" ref="messagesEl">
+      <div v-if="messages.length === 0" class="empty">
+        <p class="empty-emoji">🤖</p>
+        <p class="empty-text">Привет! Я знаю твои привычки и задачи. Спроси меня что угодно!</p>
+        <div class="suggestions">
+          <button v-for="s in suggestions" :key="s" class="suggestion-btn" @click="sendMessage(s)">
+            {{ s }}
+          </button>
+        </div>
+      </div>
+
+      <template v-else>
+        <div v-for="msg in messages" :key="msg.id" class="message" :class="msg.role">
+          <p class="message-text">{{ msg.text }}</p>
+        </div>
+
+        <div v-if="loading" class="message assistant">
+          <p class="message-text typing">думаю...</p>
+        </div>
+
+        <div v-if="!loading" class="quick-suggestions">
+          <button v-for="s in quickSuggestions" :key="s" class="quick-btn" @click="sendMessage(s)">
+            {{ s }}
+          </button>
+        </div>
+      </template>
+    </div>
+
+    <div class="input-row">
+      <input
+        v-model="input"
+        class="chat-input"
+        placeholder="Напиши сообщение..."
+        @keydown.enter="sendMessage()"
+        :disabled="loading"
+      />
+      <button class="send-btn" @click="sendMessage()" :disabled="loading || !input.trim()">
+        <Send :size="18" />
+      </button>
+    </div>
+  </div>
+</template>
+
+<script setup>
+import { ref, nextTick, onMounted } from 'vue'
+import { Send } from 'lucide-vue-next'
+import { askAI } from '../composables/useAI'
+import { useHabitsStore } from '../stores/habits'
+
+const store = useHabitsStore()
+const messages = ref([])
+const input = ref('')
+const loading = ref(false)
+const messagesEl = ref(null)
+
+const suggestions = [
+  'Как у меня дела сегодня?',
+  'Что мне стоит сделать прямо сейчас?',
+  'Какие задачи остались со вчера?',
+  'Дай совет как не откладывать дела',
+]
+
+const quickSuggestions = [
+  'Что ещё мне стоит сделать?',
+  'Дай мотивацию',
+  'Как мои цели?',
+  'Что приоритетнее сейчас?',
+]
+
+onMounted(() => {
+  const today = new Date().toISOString().split('T')[0]
+  if (store.aiMessagesDate === today && store.aiMessages.length > 0) {
+    messages.value = store.aiMessages
+    nextTick(() => scrollToBottom())
+  } else {
+    store.clearAIMessages()
+    messages.value = []
+  }
+})
+
+async function sendMessage(text) {
+  const msg = text || input.value.trim()
+  if (!msg || loading.value) return
+
+  messages.value.push({ id: Date.now(), role: 'user', text: msg })
+  input.value = ''
+  loading.value = true
+
+  await nextTick()
+  scrollToBottom()
+
+  try {
+    const reply = await askAI(msg)
+    messages.value.push({ id: Date.now() + 1, role: 'assistant', text: reply })
+    store.saveAIMessages(messages.value)
+  } catch (e) {
+    messages.value.push({
+      id: Date.now() + 1,
+      role: 'assistant',
+      text: 'Что-то пошло не так. Проверь подключение к интернету.',
+    })
+  }
+
+  loading.value = false
+  await nextTick()
+  scrollToBottom()
+}
+
+function scrollToBottom() {
+  if (messagesEl.value) {
+    messagesEl.value.scrollTop = messagesEl.value.scrollHeight
+  }
+}
+</script>
+
+<style scoped>
+.ai-view {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  padding-top: 60px;
+  padding-bottom: 80px;
+}
+.title {
+  font-size: 28px;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin: 0 24px 4px;
+}
+.subtitle {
+  font-size: 14px;
+  color: #aaa;
+  margin: 0 24px 12px;
+}
+.messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 40px 0;
+  text-align: center;
+}
+.empty-emoji {
+  font-size: 48px;
+}
+.empty-text {
+  font-size: 15px;
+  color: #888;
+  line-height: 1.5;
+  max-width: 280px;
+}
+.suggestions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+.suggestion-btn {
+  background: #eeedfe;
+  border: none;
+  border-radius: 12px;
+  padding: 12px 16px;
+  font-size: 14px;
+  color: #534ab7;
+  cursor: pointer;
+  text-align: left;
+}
+.suggestion-btn:active {
+  transform: scale(0.98);
+}
+.message {
+  max-width: 80%;
+  padding: 12px 16px;
+  border-radius: 16px;
+  line-height: 1.5;
+}
+.message.user {
+  align-self: flex-end;
+  background: #534ab7;
+  border-bottom-right-radius: 4px;
+}
+.message.assistant {
+  align-self: flex-start;
+  background: #f0f0ee;
+  border-bottom-left-radius: 4px;
+}
+.message-text {
+  font-size: 15px;
+  margin: 0;
+  color: #1a1a1a;
+}
+.message.user .message-text {
+  color: #fff;
+}
+.typing {
+  color: #aaa !important;
+  font-style: italic;
+}
+.quick-suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 4px;
+}
+.quick-btn {
+  background: #eeedfe;
+  border: none;
+  border-radius: 20px;
+  padding: 8px 14px;
+  font-size: 13px;
+  color: #534ab7;
+  cursor: pointer;
+}
+.quick-btn:active {
+  transform: scale(0.97);
+}
+.input-row {
+  position: fixed;
+  bottom: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 430px;
+  display: flex;
+  gap: 10px;
+  padding: 12px 24px;
+  background: rgba(249, 249, 247, 0.92);
+  backdrop-filter: blur(12px);
+  border-top: 0.5px solid rgba(0, 0, 0, 0.08);
+}
+.chat-input {
+  flex: 1;
+  border: 1px solid #eee;
+  border-radius: 12px;
+  padding: 12px 16px;
+  font-size: 15px;
+  outline: none;
+  background: #fff;
+  color: #1a1a1a;
+}
+.chat-input:focus {
+  border-color: #534ab7;
+}
+.send-btn {
+  width: 44px;
+  height: 44px;
+  background: #534ab7;
+  border: none;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #fff;
+  flex-shrink: 0;
+}
+.send-btn:disabled {
+  background: #ccc;
+}
+.send-btn:active:not(:disabled) {
+  transform: scale(0.95);
+}
+</style>
