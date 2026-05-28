@@ -42,21 +42,24 @@ const last14Days = () => {
     const dateStr = d.toISOString().split('T')[0]
     const label = d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' })
     const completed = store.habits.filter((h) => h.completedDates.includes(dateStr)).length
-    const streak = Math.max(
-      0,
-      ...store.habits.map((h) => {
-        let s = 0
-        for (let j = 0; j <= i; j++) {
-          const dd = new Date()
-          dd.setDate(dd.getDate() - j)
-          const ds = dd.toISOString().split('T')[0]
-          if (h.completedDates.includes(ds)) s++
-          else break
-        }
-        return s
-      }),
-    )
-    days.push({ label, completed, streak })
+
+    let maxStreak = 0
+    store.habits.forEach((h) => {
+      if (!h.completedDates.includes(dateStr)) return
+      let s = 1
+      let checkDate = new Date(d)
+      checkDate.setDate(checkDate.getDate() - 1)
+      while (true) {
+        const checkStr = checkDate.toISOString().split('T')[0]
+        if (h.completedDates.includes(checkStr)) {
+          s++
+          checkDate.setDate(checkDate.getDate() - 1)
+        } else break
+      }
+      if (s > maxStreak) maxStreak = s
+    })
+
+    days.push({ label, completed, streak: maxStreak })
   }
   return days
 }
