@@ -106,7 +106,7 @@
           v-for="goal in sortedGoals"
           :key="goal.id"
           class="goal-card"
-          :class="deadlineClass(goal.deadline)"
+          :class="deadlineClass(goal)"
         >
           <div class="goal-header">
             <div class="goal-title-row">
@@ -116,8 +116,8 @@
               </button>
             </div>
             <div class="goal-meta">
-              <span class="deadline-badge" :class="deadlineClass(goal.deadline)">
-                📅 {{ formatDeadline(goal.deadline) }}
+              <span class="deadline-badge" :class="deadlineClass(goal)">
+                📅 {{ formatDeadline(goal) }}
               </span>
               <span class="progress-text">{{ goalProgress(goal) }}%</span>
             </div>
@@ -127,7 +127,7 @@
             <div
               class="goal-progress-bar"
               :style="{ width: goalProgress(goal) + '%' }"
-              :class="deadlineClass(goal.deadline)"
+              :class="deadlineClass(goal)"
             />
           </div>
 
@@ -221,15 +221,17 @@ function daysLeft(deadline) {
   return Math.ceil((d - today) / (1000 * 60 * 60 * 24))
 }
 
-function deadlineClass(deadline) {
-  const days = daysLeft(deadline)
+function deadlineClass(goal) {
+  if (goalProgress(goal) === 100) return 'completed'
+  const days = daysLeft(goal.deadline)
   if (days < 0) return 'overdue'
   if (days <= 3) return 'urgent'
   return 'normal'
 }
 
-function formatDeadline(deadline) {
-  const days = daysLeft(deadline)
+function formatDeadline(goal) {
+  if (goalProgress(goal) === 100) return 'выполнено!'
+  const days = daysLeft(goal.deadline)
   if (days < 0) return `просрочено на ${Math.abs(days)} дн.`
   if (days === 0) return 'сегодня!'
   if (days === 1) return 'завтра'
@@ -550,5 +552,14 @@ const sortedGoals = computed(() =>
   cursor: pointer;
   color: #534ab7;
   flex-shrink: 0;
+}
+.goal-card.completed {
+  border-color: #1d9e75;
+}
+.deadline-badge.completed {
+  color: #1d9e75;
+}
+.goal-progress-bar.completed {
+  background: #1d9e75;
 }
 </style>
