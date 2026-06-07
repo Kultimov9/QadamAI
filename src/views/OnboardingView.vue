@@ -1,7 +1,7 @@
 <template>
-  <div class="onboarding">
+  <div class="onboarding" :class="step === 2 ? 'light' : 'dark'">
     <div class="slide" v-if="step === 0">
-      <div class="big-emoji">🚀</div>
+      <div class="icon-wrap">🚀</div>
       <h1 class="title">Начни с малого</h1>
       <p class="desc">
         Не нужно менять всё сразу. Одно маленькое действие в день — и через месяц ты не узнаешь
@@ -11,7 +11,7 @@
     </div>
 
     <div class="slide" v-if="step === 1">
-      <div class="big-emoji">⚡</div>
+      <div class="icon-wrap">⚡</div>
       <h1 class="title">Барьер — ноль</h1>
       <p class="desc">
         Нажал одну кнопку — уже начал. Можешь остановиться через минуту. Главное — начать.
@@ -20,9 +20,11 @@
     </div>
 
     <div class="slide" v-if="step === 2">
-      <div class="big-emoji">✨</div>
-      <h1 class="title">Выбери привычки</h1>
-      <p class="desc">Выбери с чего начнёшь. Можно добавить свои позже.</p>
+      <div class="slide-header">
+        <div class="icon-wrap light-icon">✨</div>
+        <h1 class="title light-title">Выбери привычки</h1>
+        <p class="desc light-desc">Выбери с чего начнёшь. Можно добавить свои позже.</p>
+      </div>
       <div class="habit-grid">
         <button
           v-for="habit in defaultHabits"
@@ -36,11 +38,19 @@
           <span class="habit-duration">{{ habit.duration }} мин</span>
         </button>
       </div>
-      <button class="btn" :disabled="selectedHabits.length === 0" @click="finish">Начать →</button>
+      <p v-if="selectedHabits.length === 0" class="hint">Выбери хотя бы одну привычку</p>
+      <button class="btn light-btn" :disabled="selectedHabits.length === 0" @click="finish">
+        Начать →
+      </button>
     </div>
 
     <div class="dots">
-      <span v-for="i in 3" :key="i" class="dot" :class="{ active: step === i - 1 }" />
+      <span
+        v-for="i in 3"
+        :key="i"
+        class="dot"
+        :class="{ active: step === i - 1, 'dot-light': step === 2 }"
+      />
     </div>
   </div>
 </template>
@@ -93,44 +103,116 @@ function finish() {
 <style scoped>
 .onboarding {
   min-height: 100vh;
-  padding: 60px 24px 40px;
   display: flex;
   flex-direction: column;
+  justify-content: space-between;
+  transition: background 0.4s ease;
+}
+
+.onboarding.dark {
+  background: linear-gradient(160deg, #1a1040 0%, #2d1f6e 50%, #3d2a8a 100%);
+}
+
+.onboarding.light {
   background: #f9f9f7;
 }
+
 .slide {
+  flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 16px;
-  flex: 1;
   justify-content: center;
+  padding: 60px 28px 20px;
   text-align: center;
-  padding-bottom: 20px;
+  gap: 16px;
 }
-.big-emoji {
-  font-size: 72px;
+
+.icon-wrap {
+  font-size: 90px;
+  line-height: 1;
+  filter: drop-shadow(0 8px 24px rgba(0, 0, 0, 0.2));
+  animation: float 3s ease-in-out infinite;
 }
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
 .title {
-  font-size: 28px;
-  font-weight: 600;
-  color: #1a1a1a;
+  font-size: 32px;
+  font-weight: 700;
+  color: #fff;
   margin: 0;
+  line-height: 1.2;
 }
+
 .desc {
-  font-size: 16px;
-  color: #888;
+  font-size: 17px;
+  color: rgba(255, 255, 255, 0.7);
   line-height: 1.6;
   margin: 0;
   max-width: 300px;
 }
+
+.btn {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(10px);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 18px;
+  padding: 18px;
+  font-size: 17px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 12px;
+  transition: all 0.2s;
+}
+
+.btn:active {
+  transform: scale(0.97);
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.slide-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding-top: 60px;
+  padding-bottom: 8px;
+}
+
+.light-icon {
+  filter: none;
+  animation: none;
+}
+
+.light-title {
+  color: #1a1a1a !important;
+  font-size: 28px;
+}
+
+.light-desc {
+  color: #888 !important;
+  font-size: 15px;
+}
+
 .habit-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 10px;
   width: 100%;
-  margin: 8px 0;
+  padding: 0 24px;
 }
+
 .habit-option {
   display: flex;
   flex-direction: column;
@@ -141,11 +223,15 @@ function finish() {
   border-radius: 16px;
   padding: 14px 10px;
   cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  transition: all 0.2s;
 }
+
 .habit-option.selected {
   border-color: #534ab7;
   background: #eeedfe;
 }
+
 .habit-option:active {
   transform: scale(0.97);
 }
@@ -161,38 +247,51 @@ function finish() {
   font-size: 11px;
   color: #aaa;
 }
-.btn {
-  width: 100%;
-  background: #534ab7;
-  color: #fff;
-  border: none;
-  border-radius: 16px;
-  padding: 18px;
-  font-size: 17px;
-  font-weight: 500;
-  cursor: pointer;
-  margin-top: 8px;
+
+.hint {
+  font-size: 13px;
+  color: #aaa;
+  margin: 0;
+  padding: 0 24px;
 }
-.btn:disabled {
-  background: #ccc;
+
+.light-btn {
+  background: #534ab7 !important;
+  border: none !important;
+  color: #fff !important;
+  margin: 0 24px;
+  width: calc(100% - 48px);
+}
+
+.light-btn:disabled {
+  background: #ccc !important;
   cursor: default;
 }
-.btn:active:not(:disabled) {
-  transform: scale(0.98);
-}
+
 .dots {
   display: flex;
   justify-content: center;
   gap: 8px;
-  padding: 16px 0 40px;
+  padding: 16px 0 48px;
 }
+
 .dot {
   width: 8px;
   height: 8px;
   border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  transition: all 0.3s;
+}
+
+.dot.active {
+  background: #fff;
+  width: 24px;
+  border-radius: 4px;
+}
+.dot.dot-light {
   background: #ddd;
 }
-.dot.active {
+.dot.dot-light.active {
   background: #534ab7;
 }
 </style>
