@@ -1,169 +1,176 @@
 <template>
   <div class="habits-view">
-    <h1 class="title">Привычки</h1>
-
-    <div class="tabs">
-      <button class="tab" :class="{ active: activeTab === 'habits' }" @click="activeTab = 'habits'">
-        Привычки
-      </button>
-      <button
-        class="tab"
-        :class="{ active: activeTab === 'progress' }"
-        @click="activeTab = 'progress'"
-      >
-        Прогресс
-      </button>
+    <div class="page-header">
+      <h1 class="title">Привычки</h1>
     </div>
-
-    <template v-if="activeTab === 'habits'">
-      <div class="section">
-        <p class="section-label">Сегодня осталось</p>
-        <div class="habit-list">
-          <div
-            v-for="habit in pendingHabits"
-            :key="habit.id"
-            class="habit-card"
-            @click="router.push(`/timer/${habit.id}`)"
-          >
-            <span class="emoji">{{ habit.emoji }}</span>
-            <div class="info">
-              <p class="name">{{ habit.name }}</p>
-              <p class="duration">{{ habit.duration }} мин</p>
-            </div>
-            <button class="delete-btn" @click.stop="confirmDelete(habit)">
-              <Trash2 :size="16" />
-            </button>
-          </div>
-        </div>
+    <div class="content">
+      <div class="tabs">
+        <button
+          class="tab"
+          :class="{ active: activeTab === 'habits' }"
+          @click="activeTab = 'habits'"
+        >
+          Привычки
+        </button>
+        <button
+          class="tab"
+          :class="{ active: activeTab === 'progress' }"
+          @click="activeTab = 'progress'"
+        >
+          Прогресс
+        </button>
       </div>
 
-      <div v-if="completedHabits.length > 0" class="section">
-        <p class="section-label">Сделано сегодня</p>
-        <div class="habit-list">
-          <div v-for="habit in completedHabits" :key="habit.id" class="habit-card done">
-            <span class="emoji">{{ habit.emoji }}</span>
-            <div class="info">
-              <p class="name">{{ habit.name }}</p>
-              <p class="streak">🔥 {{ habit.streak }} дней подряд</p>
-            </div>
-            <button class="delete-btn" @click.stop="confirmDelete(habit)">
-              <Trash2 :size="16" />
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <div class="section">
-        <p class="section-label">Добавить привычку</p>
-        <div class="add-form">
-          <div class="form-row">
-            <input v-model="newEmoji" class="emoji-input" placeholder="😀" maxlength="2" />
-            <input v-model="newName" class="name-input" placeholder="Название" />
-          </div>
-          <div class="form-row">
-            <label class="duration-label">Минут: {{ newDuration }}</label>
-            <input v-model="newDuration" type="range" min="1" max="60" class="slider" />
-          </div>
-          <button class="add-btn" @click="addHabit">Добавить</button>
-        </div>
-      </div>
-
-      <div class="section">
-        <p class="section-label">Уведомления</p>
-        <div class="notif-card">
-          <div class="notif-row">
-            <span class="notif-label">🌅 Утреннее напоминание</span>
-            <select
-              class="time-select"
-              :value="store.notifications.morningHour"
-              @change="updateNotif('morningHour', $event.target.value)"
+      <template v-if="activeTab === 'habits'">
+        <div class="section">
+          <p class="section-label">Сегодня осталось</p>
+          <div class="habit-list">
+            <div
+              v-for="habit in pendingHabits"
+              :key="habit.id"
+              class="habit-card"
+              @click="router.push(`/timer/${habit.id}`)"
             >
-              <option v-for="h in hours" :key="h" :value="h">{{ h }}:00</option>
-            </select>
-          </div>
-          <div class="notif-row">
-            <span class="notif-label">🌙 Вечернее напоминание</span>
-            <select
-              class="time-select"
-              :value="store.notifications.eveningHour"
-              @change="updateNotif('eveningHour', $event.target.value)"
-            >
-              <option v-for="h in hours" :key="h" :value="h">{{ h }}:00</option>
-            </select>
-          </div>
-        </div>
-      </div>
-    </template>
-
-    <template v-if="activeTab === 'progress'">
-      <div class="stats-grid">
-        <div class="stat-card">
-          <p class="stat-num">{{ totalCompleted }}</p>
-          <p class="stat-label">всего выполнено</p>
-        </div>
-        <div class="stat-card">
-          <p class="stat-num">{{ bestStreak }}</p>
-          <p class="stat-label">лучший streak</p>
-        </div>
-        <div class="stat-card">
-          <p class="stat-num">{{ activeDays }}</p>
-          <p class="stat-label">активных дней</p>
-        </div>
-        <div class="stat-card">
-          <p class="stat-num">{{ store.habits.length }}</p>
-          <p class="stat-label">привычек</p>
-        </div>
-      </div>
-
-      <div class="section">
-        <p class="section-label">График за 14 дней</p>
-        <ProgressChart />
-      </div>
-
-      <div class="section">
-        <p class="section-label">Активность за 7 дней</p>
-        <div class="bar-chart">
-          <div v-for="day in last7Days" :key="day.date" class="bar-col">
-            <div class="bar-wrap">
-              <div
-                class="bar"
-                :style="{ height: barHeight(day.count) }"
-                :class="{ active: day.count > 0 }"
-              />
+              <span class="emoji">{{ habit.emoji }}</span>
+              <div class="info">
+                <p class="name">{{ habit.name }}</p>
+                <p class="duration">{{ habit.duration }} мин</p>
+              </div>
+              <button class="delete-btn" @click.stop="confirmDelete(habit)">
+                <Trash2 :size="16" />
+              </button>
             </div>
-            <span class="bar-label">{{ day.label }}</span>
           </div>
         </div>
-      </div>
 
-      <div class="section">
-        <p class="section-label">По привычкам</p>
-        <div class="habit-stats">
-          <div v-for="habit in habitStats" :key="habit.id" class="habit-stat-card">
-            <div class="habit-stat-top">
-              <span class="habit-emoji">{{ habit.emoji }}</span>
-              <span class="habit-name-stat">{{ habit.name }}</span>
-              <span class="habit-streak-stat">🔥 {{ habit.streak }}</span>
+        <div v-if="completedHabits.length > 0" class="section">
+          <p class="section-label">Сделано сегодня</p>
+          <div class="habit-list">
+            <div v-for="habit in completedHabits" :key="habit.id" class="habit-card done">
+              <span class="emoji">{{ habit.emoji }}</span>
+              <div class="info">
+                <p class="name">{{ habit.name }}</p>
+                <p class="streak">🔥 {{ habit.streak }} дней подряд</p>
+              </div>
+              <button class="delete-btn" @click.stop="confirmDelete(habit)">
+                <Trash2 :size="16" />
+              </button>
             </div>
-            <div class="progress-bar-wrap">
-              <div
-                class="progress-bar"
-                :style="{ width: habitProgress(habit.completedDates.length) }"
-              />
-            </div>
-            <p class="habit-count">{{ habit.completedDates.length }} дней выполнено</p>
           </div>
         </div>
-      </div>
-    </template>
 
-    <div v-if="habitToDelete" class="modal-overlay" @click="habitToDelete = null">
-      <div class="modal" @click.stop>
-        <p class="modal-title">Удалить привычку?</p>
-        <p class="modal-desc">«{{ habitToDelete.name }}» и весь прогресс будут удалены.</p>
-        <div class="modal-actions">
-          <button class="modal-cancel" @click="habitToDelete = null">Отмена</button>
-          <button class="modal-confirm" @click="deleteHabit">Удалить</button>
+        <div class="section">
+          <p class="section-label">Добавить привычку</p>
+          <div class="add-form">
+            <div class="form-row">
+              <input v-model="newEmoji" class="emoji-input" placeholder="😀" maxlength="2" />
+              <input v-model="newName" class="name-input" placeholder="Название" />
+            </div>
+            <div class="form-row">
+              <label class="duration-label">Минут: {{ newDuration }}</label>
+              <input v-model="newDuration" type="range" min="1" max="60" class="slider" />
+            </div>
+            <button class="add-btn" @click="addHabit">Добавить</button>
+          </div>
+        </div>
+
+        <div class="section">
+          <p class="section-label">Уведомления</p>
+          <div class="notif-card">
+            <div class="notif-row">
+              <span class="notif-label">🌅 Утреннее напоминание</span>
+              <select
+                class="time-select"
+                :value="store.notifications.morningHour"
+                @change="updateNotif('morningHour', $event.target.value)"
+              >
+                <option v-for="h in hours" :key="h" :value="h">{{ h }}:00</option>
+              </select>
+            </div>
+            <div class="notif-row">
+              <span class="notif-label">🌙 Вечернее напоминание</span>
+              <select
+                class="time-select"
+                :value="store.notifications.eveningHour"
+                @change="updateNotif('eveningHour', $event.target.value)"
+              >
+                <option v-for="h in hours" :key="h" :value="h">{{ h }}:00</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </template>
+
+      <template v-if="activeTab === 'progress'">
+        <div class="stats-grid">
+          <div class="stat-card">
+            <p class="stat-num">{{ totalCompleted }}</p>
+            <p class="stat-label">всего выполнено</p>
+          </div>
+          <div class="stat-card">
+            <p class="stat-num">{{ bestStreak }}</p>
+            <p class="stat-label">лучший streak</p>
+          </div>
+          <div class="stat-card">
+            <p class="stat-num">{{ activeDays }}</p>
+            <p class="stat-label">активных дней</p>
+          </div>
+          <div class="stat-card">
+            <p class="stat-num">{{ store.habits.length }}</p>
+            <p class="stat-label">привычек</p>
+          </div>
+        </div>
+
+        <div class="section">
+          <p class="section-label">График за 14 дней</p>
+          <ProgressChart />
+        </div>
+
+        <div class="section">
+          <p class="section-label">Активность за 7 дней</p>
+          <div class="bar-chart">
+            <div v-for="day in last7Days" :key="day.date" class="bar-col">
+              <div class="bar-wrap">
+                <div
+                  class="bar"
+                  :style="{ height: barHeight(day.count) }"
+                  :class="{ active: day.count > 0 }"
+                />
+              </div>
+              <span class="bar-label">{{ day.label }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="section">
+          <p class="section-label">По привычкам</p>
+          <div class="habit-stats">
+            <div v-for="habit in habitStats" :key="habit.id" class="habit-stat-card">
+              <div class="habit-stat-top">
+                <span class="habit-emoji">{{ habit.emoji }}</span>
+                <span class="habit-name-stat">{{ habit.name }}</span>
+                <span class="habit-streak-stat">🔥 {{ habit.streak }}</span>
+              </div>
+              <div class="progress-bar-wrap">
+                <div
+                  class="progress-bar"
+                  :style="{ width: habitProgress(habit.completedDates.length) }"
+                />
+              </div>
+              <p class="habit-count">{{ habit.completedDates.length }} дней выполнено</p>
+            </div>
+          </div>
+        </div>
+      </template>
+
+      <div v-if="habitToDelete" class="modal-overlay" @click="habitToDelete = null">
+        <div class="modal" @click.stop>
+          <p class="modal-title">Удалить привычку?</p>
+          <p class="modal-desc">«{{ habitToDelete.name }}» и весь прогресс будут удалены.</p>
+          <div class="modal-actions">
+            <button class="modal-cancel" @click="habitToDelete = null">Отмена</button>
+            <button class="modal-confirm" @click="deleteHabit">Удалить</button>
+          </div>
         </div>
       </div>
     </div>
@@ -252,10 +259,10 @@ function habitProgress(count) {
 
 <style scoped>
 .habits-view {
-  padding: 60px 24px 100px;
-  display: flex;
+  padding: 0 0 100px;
+  /* display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 20px; */
 }
 .title {
   font-size: 28px;
@@ -595,5 +602,19 @@ function habitProgress(count) {
   color: #fff;
   font-weight: 500;
   cursor: pointer;
+}
+.page-header {
+  position: sticky;
+  top: 0;
+  background: #f9f9f7;
+  padding: env(safe-area-inset-top) 24px 12px;
+  padding-top: max(env(safe-area-inset-top), 54px);
+  z-index: 10;
+}
+.content {
+  padding: 0 24px 100px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
 }
 </style>

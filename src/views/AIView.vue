@@ -1,47 +1,60 @@
 <template>
   <div class="ai-view">
-    <h1 class="title">AI помощник</h1>
-    <p class="subtitle">Знает твои привычки и задачи</p>
-
-    <div class="messages" ref="messagesEl">
-      <div v-if="messages.length === 0" class="empty">
-        <p class="empty-emoji">🤖</p>
-        <p class="empty-text">Привет! Я знаю твои привычки и задачи. Спроси меня что угодно!</p>
-        <div class="suggestions">
-          <button v-for="s in suggestions" :key="s" class="suggestion-btn" @click="sendMessage(s)">
-            {{ s }}
-          </button>
+    <div class="page-header">
+      <h1 class="title">AI помощник</h1>
+      <p class="subtitle">Знает твои привычки и задачи</p>
+    </div>
+    <div class="content">
+      <div class="messages" ref="messagesEl">
+        <div v-if="messages.length === 0" class="empty">
+          <p class="empty-emoji">🤖</p>
+          <p class="empty-text">Привет! Я знаю твои привычки и задачи. Спроси меня что угодно!</p>
+          <div class="suggestions">
+            <button
+              v-for="s in suggestions"
+              :key="s"
+              class="suggestion-btn"
+              @click="sendMessage(s)"
+            >
+              {{ s }}
+            </button>
+          </div>
         </div>
+
+        <template v-else>
+          <div v-for="msg in messages" :key="msg.id" class="message" :class="msg.role">
+            <p class="message-text">{{ msg.text }}</p>
+          </div>
+
+          <div v-if="loading" class="message assistant">
+            <p class="message-text typing">думаю...</p>
+          </div>
+
+          <div v-if="!loading" class="quick-suggestions">
+            <button
+              v-for="s in quickSuggestions"
+              :key="s"
+              class="quick-btn"
+              @click="sendMessage(s)"
+            >
+              {{ s }}
+            </button>
+          </div>
+        </template>
       </div>
 
-      <template v-else>
-        <div v-for="msg in messages" :key="msg.id" class="message" :class="msg.role">
-          <p class="message-text">{{ msg.text }}</p>
-        </div>
-
-        <div v-if="loading" class="message assistant">
-          <p class="message-text typing">думаю...</p>
-        </div>
-
-        <div v-if="!loading" class="quick-suggestions">
-          <button v-for="s in quickSuggestions" :key="s" class="quick-btn" @click="sendMessage(s)">
-            {{ s }}
-          </button>
-        </div>
-      </template>
-    </div>
-
-    <div class="input-row">
-      <input
-        v-model="input"
-        class="chat-input"
-        placeholder="Напиши сообщение..."
-        @keydown.enter="sendMessage()"
-        :disabled="loading"
-      />
-      <button class="send-btn" @click="sendMessage()" :disabled="loading || !input.trim()">
-        <Send :size="18" />
-      </button>
+      <div class="input-row">
+        <input
+          v-model="input"
+          class="chat-input"
+          placeholder="Напиши сообщение..."
+          @keydown.enter="sendMessage()"
+          :disabled="loading"
+        />
+        <button class="send-btn" @click="sendMessage()" :disabled="loading || !input.trim()">
+          <Send :size="18" />
+        </button>
+      </div>
     </div>
   </div>
 </template>
@@ -120,6 +133,7 @@ function scrollToBottom() {
 
 <style scoped>
 .ai-view {
+  /* padding: 0 0 100px; */
   display: flex;
   flex-direction: column;
   height: 100vh;
@@ -272,5 +286,19 @@ function scrollToBottom() {
 }
 .send-btn:active:not(:disabled) {
   transform: scale(0.95);
+}
+.page-header {
+  position: sticky;
+  top: 0;
+  background: #f9f9f7;
+  padding: env(safe-area-inset-top) 24px 12px;
+  padding-top: max(env(safe-area-inset-top), 54px);
+  z-index: 10;
+}
+.content {
+  padding: 0 24px 100px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
 }
 </style>

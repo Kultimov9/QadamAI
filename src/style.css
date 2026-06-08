@@ -33,3 +33,12 @@ select {
     BlinkMacSystemFont,
     sans-serif;
 }
+
+.home,
+.tasks-view,
+.habits-view,
+.ai-view,
+.reflection-view,
+.progress-view {
+  padding-top: max(60px, env(safe-area-inset-top) + 16px);
+}

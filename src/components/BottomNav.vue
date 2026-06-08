@@ -46,7 +46,7 @@ const route = useRoute()
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border-top: 0.5px solid rgba(0, 0, 0, 0.08);
-  padding: 10px 0 28px;
+  padding: 10px 0 max(28px, env(safe-area-inset-bottom));
 }
 .nav-item {
   flex: 1;

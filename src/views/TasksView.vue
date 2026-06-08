@@ -1,167 +1,170 @@
 <template>
   <div class="tasks-view">
-    <div class="tabs">
-      <button class="tab" :class="{ active: activeTab === 'tasks' }" @click="activeTab = 'tasks'">
-        Задачи
-      </button>
-      <button class="tab" :class="{ active: activeTab === 'goals' }" @click="activeTab = 'goals'">
-        Цели
-      </button>
-    </div>
-
-    <template v-if="activeTab === 'tasks'">
-      <div class="header">
-        <h1 class="title">Задачи на сегодня</h1>
-        <p class="subtitle">{{ completedCount }} из {{ totalCount }} выполнено</p>
-      </div>
-
-      <div class="progress-bar-wrap">
-        <div class="progress-bar" :style="{ width: progressWidth }" />
-      </div>
-
-      <div class="add-row">
-        <input
-          v-model="newTask"
-          class="task-input"
-          placeholder="Добавить задачу..."
-          @keydown.enter="addTask"
-        />
-        <button class="add-btn" @click="addTask">
-          <Plus :size="20" />
+    <div class="page-header">
+      <div class="tabs">
+        <button class="tab" :class="{ active: activeTab === 'tasks' }" @click="activeTab = 'tasks'">
+          Задачи
+        </button>
+        <button class="tab" :class="{ active: activeTab === 'goals' }" @click="activeTab = 'goals'">
+          Цели
         </button>
       </div>
-
-      <div v-if="pendingTasks.length > 0" class="section">
-        <p class="section-label">Осталось</p>
-        <div class="task-list">
-          <div
-            v-for="task in pendingTasks"
-            :key="task.id"
-            class="task-card"
-            @click="store.toggleTask(task.id)"
-          >
-            <div class="checkbox" />
-            <span class="task-text">{{ task.text }}</span>
-            <button class="delete-btn" @click.stop="store.removeTask(task.id)">
-              <Trash2 :size="15" />
-            </button>
-          </div>
+    </div>
+    <div class="content">
+      <template v-if="activeTab === 'tasks'">
+        <div class="header">
+          <h1 class="title">Задачи на сегодня</h1>
+          <p class="subtitle">{{ completedCount }} из {{ totalCount }} выполнено</p>
         </div>
-      </div>
 
-      <div v-if="doneTasks.length > 0" class="section">
-        <p class="section-label">Готово</p>
-        <div class="task-list">
-          <div
-            v-for="task in doneTasks"
-            :key="task.id"
-            class="task-card done"
-            @click="store.toggleTask(task.id)"
-          >
-            <div class="checkbox checked">
-              <Check :size="12" color="#fff" />
-            </div>
-            <span class="task-text">{{ task.text }}</span>
-            <button class="delete-btn" @click.stop="store.removeTask(task.id)">
-              <Trash2 :size="15" />
-            </button>
-          </div>
+        <div class="progress-bar-wrap">
+          <div class="progress-bar" :style="{ width: progressWidth }" />
         </div>
-      </div>
 
-      <div v-if="totalCount === 0" class="empty">
-        <p class="empty-text">Добавь первую задачу на сегодня</p>
-      </div>
-
-      <div v-if="totalCount > 0 && completedCount === totalCount" class="congrats">
-        <p class="congrats-text">🎉 Все задачи выполнены!</p>
-      </div>
-    </template>
-
-    <template v-if="activeTab === 'goals'">
-      <div class="header">
-        <h1 class="title">Ближайшие цели</h1>
-        <p class="subtitle">
-          {{ store.goals.filter((g) => goalProgress(g) === 100).length }} из
-          {{ store.goals.length }} достигнуто
-        </p>
-      </div>
-
-      <div class="add-goal-form">
-        <input v-model="newGoalTitle" class="task-input" placeholder="Название цели..." />
-        <div class="add-row" style="margin-top: 8px">
-          <input v-model="newGoalDeadline" class="task-input" type="date" />
-          <button class="add-btn" @click="addGoal">
+        <div class="add-row">
+          <input
+            v-model="newTask"
+            class="task-input"
+            placeholder="Добавить задачу..."
+            @keydown.enter="addTask"
+          />
+          <button class="add-btn" @click="addTask">
             <Plus :size="20" />
           </button>
         </div>
-      </div>
 
-      <div v-if="store.goals.length === 0" class="empty">
-        <p class="empty-text">Добавь первую цель</p>
-      </div>
-
-      <div class="goal-list">
-        <div
-          v-for="goal in sortedGoals"
-          :key="goal.id"
-          class="goal-card"
-          :class="deadlineClass(goal)"
-        >
-          <div class="goal-header">
-            <div class="goal-title-row">
-              <span class="goal-title">{{ goal.title }}</span>
-              <button class="delete-btn" @click="store.removeGoal(goal.id)">
+        <div v-if="pendingTasks.length > 0" class="section">
+          <p class="section-label">Осталось</p>
+          <div class="task-list">
+            <div
+              v-for="task in pendingTasks"
+              :key="task.id"
+              class="task-card"
+              @click="store.toggleTask(task.id)"
+            >
+              <div class="checkbox" />
+              <span class="task-text">{{ task.text }}</span>
+              <button class="delete-btn" @click.stop="store.removeTask(task.id)">
                 <Trash2 :size="15" />
               </button>
             </div>
-            <div class="goal-meta">
-              <span class="deadline-badge" :class="deadlineClass(goal)">
-                📅 {{ formatDeadline(goal) }}
-              </span>
-              <span class="progress-text">{{ goalProgress(goal) }}%</span>
-            </div>
           </div>
+        </div>
 
-          <div class="goal-progress-wrap">
+        <div v-if="doneTasks.length > 0" class="section">
+          <p class="section-label">Готово</p>
+          <div class="task-list">
             <div
-              class="goal-progress-bar"
-              :style="{ width: goalProgress(goal) + '%' }"
-              :class="deadlineClass(goal)"
-            />
-          </div>
-
-          <div class="steps-list">
-            <div
-              v-for="step in goal.steps"
-              :key="step.id"
-              class="step-row"
-              @click="store.toggleStep(goal.id, step.id)"
+              v-for="task in doneTasks"
+              :key="task.id"
+              class="task-card done"
+              @click="store.toggleTask(task.id)"
             >
-              <div class="checkbox" :class="{ checked: step.done }">
-                <Check v-if="step.done" :size="12" color="#fff" />
+              <div class="checkbox checked">
+                <Check :size="12" color="#fff" />
               </div>
-              <span class="step-text" :class="{ done: step.done }">{{ step.text }}</span>
-              <button class="delete-btn" @click.stop="store.removeStep(goal.id, step.id)">
-                <Trash2 :size="13" />
+              <span class="task-text">{{ task.text }}</span>
+              <button class="delete-btn" @click.stop="store.removeTask(task.id)">
+                <Trash2 :size="15" />
               </button>
             </div>
           </div>
+        </div>
 
-          <div class="add-step-row">
-            <input
-              v-model="newSteps[goal.id]"
-              class="step-input"
-              placeholder="Добавить шаг..."
-              @keydown.enter="addStep(goal.id)"
-            />
-            <button class="add-step-btn" @click="addStep(goal.id)">
-              <Plus :size="16" />
+        <div v-if="totalCount === 0" class="empty">
+          <p class="empty-text">Добавь первую задачу на сегодня</p>
+        </div>
+
+        <div v-if="totalCount > 0 && completedCount === totalCount" class="congrats">
+          <p class="congrats-text">🎉 Все задачи выполнены!</p>
+        </div>
+      </template>
+
+      <template v-if="activeTab === 'goals'">
+        <div class="header">
+          <h1 class="title">Ближайшие цели</h1>
+          <p class="subtitle">
+            {{ store.goals.filter((g) => goalProgress(g) === 100).length }} из
+            {{ store.goals.length }} достигнуто
+          </p>
+        </div>
+
+        <div class="add-goal-form">
+          <input v-model="newGoalTitle" class="task-input" placeholder="Название цели..." />
+          <div class="add-row" style="margin-top: 8px">
+            <input v-model="newGoalDeadline" class="task-input" type="date" />
+            <button class="add-btn" @click="addGoal">
+              <Plus :size="20" />
             </button>
           </div>
         </div>
-      </div>
-    </template>
+
+        <div v-if="store.goals.length === 0" class="empty">
+          <p class="empty-text">Добавь первую цель</p>
+        </div>
+
+        <div class="goal-list">
+          <div
+            v-for="goal in sortedGoals"
+            :key="goal.id"
+            class="goal-card"
+            :class="deadlineClass(goal)"
+          >
+            <div class="goal-header">
+              <div class="goal-title-row">
+                <span class="goal-title">{{ goal.title }}</span>
+                <button class="delete-btn" @click="store.removeGoal(goal.id)">
+                  <Trash2 :size="15" />
+                </button>
+              </div>
+              <div class="goal-meta">
+                <span class="deadline-badge" :class="deadlineClass(goal)">
+                  📅 {{ formatDeadline(goal) }}
+                </span>
+                <span class="progress-text">{{ goalProgress(goal) }}%</span>
+              </div>
+            </div>
+
+            <div class="goal-progress-wrap">
+              <div
+                class="goal-progress-bar"
+                :style="{ width: goalProgress(goal) + '%' }"
+                :class="deadlineClass(goal)"
+              />
+            </div>
+
+            <div class="steps-list">
+              <div
+                v-for="step in goal.steps"
+                :key="step.id"
+                class="step-row"
+                @click="store.toggleStep(goal.id, step.id)"
+              >
+                <div class="checkbox" :class="{ checked: step.done }">
+                  <Check v-if="step.done" :size="12" color="#fff" />
+                </div>
+                <span class="step-text" :class="{ done: step.done }">{{ step.text }}</span>
+                <button class="delete-btn" @click.stop="store.removeStep(goal.id, step.id)">
+                  <Trash2 :size="13" />
+                </button>
+              </div>
+            </div>
+
+            <div class="add-step-row">
+              <input
+                v-model="newSteps[goal.id]"
+                class="step-input"
+                placeholder="Добавить шаг..."
+                @keydown.enter="addStep(goal.id)"
+              />
+              <button class="add-step-btn" @click="addStep(goal.id)">
+                <Plus :size="16" />
+              </button>
+            </div>
+          </div>
+        </div>
+      </template>
+    </div>
   </div>
 </template>
 
@@ -245,10 +248,11 @@ const sortedGoals = computed(() =>
 
 <style scoped>
 .tasks-view {
-  padding: 60px 24px 100px;
+  padding: 0 0 100px;
+  /* padding: max(80px, env(safe-area-inset-top) + 24px) 24px 100px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 16px; */
 }
 .tabs {
   display: flex;
@@ -561,5 +565,21 @@ const sortedGoals = computed(() =>
 }
 .goal-progress-bar.completed {
   background: #1d9e75;
+}
+.page-header {
+  position: sticky;
+  top: 7px;
+  background: #f9f9f7;
+  padding-top: max(env(safe-area-inset-top), 54px);
+  padding-left: 24px;
+  padding-right: 24px;
+  padding-bottom: 12px;
+  z-index: 10;
+}
+.content {
+  padding: 0 24px 100px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 </style>

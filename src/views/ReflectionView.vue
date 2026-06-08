@@ -1,81 +1,84 @@
 <template>
   <div class="reflection-view">
-    <h1 class="title">Как прошёл день?</h1>
-    <p class="subtitle">Это займёт 30 секунд</p>
-
-    <div class="section">
-      <p class="section-label">Настроение</p>
-      <div class="mood-row">
-        <button
-          v-for="mood in moods"
-          :key="mood.value"
-          class="mood-btn"
-          :class="{ selected: selectedMood === mood.value }"
-          @click="selectedMood = mood.value"
-        >
-          {{ mood.emoji }}
-        </button>
-      </div>
+    <div class="page-header">
+      <h1 class="title">Как прошёл день?</h1>
+      <p class="subtitle">Это займёт 30 секунд</p>
     </div>
-
-    <div class="section">
-      <p class="section-label">Что мешало сегодня?</p>
-      <div class="obstacle-list">
-        <button
-          v-for="obstacle in obstacles"
-          :key="obstacle"
-          class="obstacle-btn"
-          :class="{ selected: selectedObstacles.includes(obstacle) }"
-          @click="toggleObstacle(obstacle)"
-        >
-          {{ obstacle }}
-        </button>
+    <div class="content">
+      <div class="section">
+        <p class="section-label">Настроение</p>
+        <div class="mood-row">
+          <button
+            v-for="mood in moods"
+            :key="mood.value"
+            class="mood-btn"
+            :class="{ selected: selectedMood === mood.value }"
+            @click="selectedMood = mood.value"
+          >
+            {{ mood.emoji }}
+          </button>
+        </div>
       </div>
-    </div>
 
-    <div class="section">
-      <p class="section-label">Заметка (необязательно)</p>
-      <textarea
-        v-model="note"
-        class="note-input"
-        placeholder="Что угодно о сегодняшнем дне..."
-        rows="3"
-      />
-    </div>
-
-    <div class="stats">
-      <div class="stat-card">
-        <p class="stat-num">{{ completedToday }}</p>
-        <p class="stat-label">сделано сегодня</p>
+      <div class="section">
+        <p class="section-label">Что мешало сегодня?</p>
+        <div class="obstacle-list">
+          <button
+            v-for="obstacle in obstacles"
+            :key="obstacle"
+            class="obstacle-btn"
+            :class="{ selected: selectedObstacles.includes(obstacle) }"
+            @click="toggleObstacle(obstacle)"
+          >
+            {{ obstacle }}
+          </button>
+        </div>
       </div>
-      <div class="stat-card">
-        <p class="stat-num">{{ bestStreak }}</p>
-        <p class="stat-label">лучший streak</p>
+
+      <div class="section">
+        <p class="section-label">Заметка (необязательно)</p>
+        <textarea
+          v-model="note"
+          class="note-input"
+          placeholder="Что угодно о сегодняшнем дне..."
+          rows="3"
+        />
       </div>
-      <div class="stat-card">
-        <p class="stat-num">{{ totalDays }}</p>
-        <p class="stat-label">дней в приложении</p>
+
+      <div class="stats">
+        <div class="stat-card">
+          <p class="stat-num">{{ completedToday }}</p>
+          <p class="stat-label">сделано сегодня</p>
+        </div>
+        <div class="stat-card">
+          <p class="stat-num">{{ bestStreak }}</p>
+          <p class="stat-label">лучший streak</p>
+        </div>
+        <div class="stat-card">
+          <p class="stat-num">{{ totalDays }}</p>
+          <p class="stat-label">дней в приложении</p>
+        </div>
       </div>
-    </div>
 
-    <div v-if="saved" class="success-banner">✅ Рефлексия сохранена!</div>
+      <div v-if="saved" class="success-banner">✅ Рефлексия сохранена!</div>
 
-    <button class="save-btn" @click="save" :disabled="saved">
-      {{ saved ? 'Сохранено ✓' : 'Сохранить' }}
-    </button>
+      <button class="save-btn" @click="save" :disabled="saved">
+        {{ saved ? 'Сохранено ✓' : 'Сохранить' }}
+      </button>
 
-    <div v-if="pastReflections.length > 0" class="section">
-      <p class="section-label">История</p>
-      <div class="history-list">
-        <div v-for="r in pastReflections" :key="r.date" class="history-card">
-          <div class="history-top">
-            <span class="history-date">{{ formatDate(r.date) }}</span>
-            <span class="history-mood">{{ moodEmoji(r.mood) }}</span>
+      <div v-if="pastReflections.length > 0" class="section">
+        <p class="section-label">История</p>
+        <div class="history-list">
+          <div v-for="r in pastReflections" :key="r.date" class="history-card">
+            <div class="history-top">
+              <span class="history-date">{{ formatDate(r.date) }}</span>
+              <span class="history-mood">{{ moodEmoji(r.mood) }}</span>
+            </div>
+            <div v-if="r.obstacles?.length" class="history-obstacles">
+              <span v-for="o in r.obstacles" :key="o" class="history-tag">{{ o }}</span>
+            </div>
+            <p v-if="r.note" class="history-note">{{ r.note }}</p>
           </div>
-          <div v-if="r.obstacles?.length" class="history-obstacles">
-            <span v-for="o in r.obstacles" :key="o" class="history-tag">{{ o }}</span>
-          </div>
-          <p v-if="r.note" class="history-note">{{ r.note }}</p>
         </div>
       </div>
     </div>
@@ -155,10 +158,11 @@ function moodEmoji(value) {
 
 <style scoped>
 .reflection-view {
-  padding: 60px 24px 100px;
+  padding: 0 0 100px;
+  /* padding: max(80px, env(safe-area-inset-top) + 24px) 24px 100px;
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 24px; */
 }
 .title {
   font-size: 28px;
@@ -322,5 +326,19 @@ function moodEmoji(value) {
 }
 .save-btn:disabled {
   background: #1d9e75;
+}
+.page-header {
+  position: sticky;
+  top: 0;
+  background: #f9f9f7;
+  padding: env(safe-area-inset-top) 24px 12px;
+  padding-top: max(env(safe-area-inset-top), 54px);
+  z-index: 10;
+}
+.content {
+  padding: 0 24px 100px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
 }
 </style>
