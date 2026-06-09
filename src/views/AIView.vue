@@ -137,19 +137,17 @@ function scrollToBottom() {
   display: flex;
   flex-direction: column;
   height: 100vh;
-  padding-top: 60px;
-  padding-bottom: 80px;
 }
 .title {
   font-size: 28px;
   font-weight: 600;
   color: #1a1a1a;
-  margin: 0 24px 4px;
+  margin: 0;
 }
 .subtitle {
   font-size: 14px;
   color: #aaa;
-  margin: 0 24px 12px;
+  margin: 0;
 }
 .messages {
   flex: 1;
@@ -288,17 +286,17 @@ function scrollToBottom() {
   transform: scale(0.95);
 }
 .page-header {
-  position: sticky;
-  top: 0;
   background: #f9f9f7;
-  padding: env(safe-area-inset-top) 24px 12px;
-  padding-top: max(env(safe-area-inset-top), 54px);
+  padding-top: max(env(safe-area-inset-top), 0px);
+  padding-left: 24px;
+  padding-right: 24px;
+  padding-bottom: 8px;
   z-index: 10;
 }
 .content {
-  padding: 0 24px 100px;
+  flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  overflow: hidden;
 }
 </style>

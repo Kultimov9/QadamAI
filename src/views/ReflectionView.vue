@@ -173,7 +173,7 @@ function moodEmoji(value) {
 .subtitle {
   font-size: 14px;
   color: #aaa;
-  margin: -16px 0 0;
+  margin: 4px 0 0;
 }
 .section {
   display: flex;
