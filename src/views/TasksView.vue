@@ -72,7 +72,12 @@
         </div>
 
         <div v-if="totalCount === 0" class="empty">
-          <p class="empty-text">Добавь первую задачу на сегодня</p>
+          <!-- <p class="empty-text">Добавь первую задачу на сегодня</p> -->
+          <p class="empty-emoji">✨</p>
+          <p class="empty-title">День чистый</p>
+          <p class="empty-text">
+            Добавь первую задачу — даже одно маленькое дело уже движение вперёд
+          </p>
         </div>
 
         <div v-if="totalCount > 0 && completedCount === totalCount" class="congrats">
@@ -88,11 +93,15 @@
             {{ store.goals.length }} достигнуто
           </p>
         </div>
-
         <div class="add-goal-form">
-          <input v-model="newGoalTitle" class="task-input" placeholder="Название цели..." />
-          <div class="add-row" style="margin-top: 8px">
-            <input v-model="newGoalDeadline" class="task-input" type="date" />
+          <input v-model="newGoalTitle" class="goal-input" placeholder="Название цели..." />
+          <div class="goal-date-row">
+            <label class="date-label">
+              <span class="date-label-text">
+                📅 {{ newGoalDeadline ? formatDate(newGoalDeadline) : 'Срок выполнения' }}
+              </span>
+              <input v-model="newGoalDeadline" type="date" class="date-hidden" />
+            </label>
             <button class="add-btn" @click="addGoal">
               <Plus :size="20" />
             </button>
@@ -191,6 +200,9 @@ const progressWidth = computed(() => {
   if (totalCount.value === 0) return '0%'
   return `${Math.round((completedCount.value / totalCount.value) * 100)}%`
 })
+const sortedGoals = computed(() =>
+  [...store.goals].sort((a, b) => new Date(a.deadline) - new Date(b.deadline)),
+)
 
 function addTask() {
   if (!newTask.value.trim()) return
@@ -241,9 +253,10 @@ function formatDeadline(goal) {
   return `через ${days} дн.`
 }
 
-const sortedGoals = computed(() =>
-  [...store.goals].sort((a, b) => new Date(a.deadline) - new Date(b.deadline)),
-)
+function formatDate(dateStr) {
+  const d = new Date(dateStr)
+  return d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' })
+}
 </script>
 
 <style scoped>
@@ -410,12 +423,20 @@ const sortedGoals = computed(() =>
   color: #ff4444;
 }
 .empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 40px 24px;
   text-align: center;
-  padding: 40px 0;
 }
 .empty-text {
   font-size: 15px;
-  color: #ccc;
+  color: #aaa;
+  text-align: center;
+  line-height: 1.5;
+  margin: 0;
+  max-width: 260px;
 }
 .congrats {
   text-align: center;
@@ -431,7 +452,7 @@ const sortedGoals = computed(() =>
 .add-goal-form {
   display: flex;
   flex-direction: column;
-  gap: 0;
+  gap: 8px;
 }
 .goal-list {
   display: flex;
@@ -581,5 +602,61 @@ const sortedGoals = computed(() =>
   display: flex;
   flex-direction: column;
   gap: 16px;
+}
+.empty-emoji {
+  font-size: 48px;
+  text-align: center;
+}
+.empty-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: #1a1a1a;
+  text-align: center;
+  margin: 0;
+}
+
+.goal-input {
+  width: 100%;
+  border: 1px solid #eee;
+  border-radius: 12px;
+  padding: 12px 16px;
+  font-size: 15px;
+  outline: none;
+  background: #fff;
+  color: #1a1a1a;
+  box-sizing: border-box;
+}
+.goal-input:focus {
+  border-color: #534ab7;
+}
+
+.goal-date-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+.date-label {
+  flex: 1;
+  border: 1px solid #eee;
+  border-radius: 12px;
+  padding: 12px 16px;
+  background: #fff;
+  cursor: pointer;
+  position: relative;
+  display: block;
+}
+.date-label-text {
+  font-size: 15px;
+  color: #888;
+  display: block;
+}
+.date-hidden {
+  position: absolute;
+  opacity: 0;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
 }
 </style>
