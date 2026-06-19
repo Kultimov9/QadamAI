@@ -72,7 +72,6 @@
         </div>
 
         <div v-if="totalCount === 0" class="empty">
-          <!-- <p class="empty-text">Добавь первую задачу на сегодня</p> -->
           <p class="empty-emoji">✨</p>
           <p class="empty-title">День чистый</p>
           <p class="empty-text">
