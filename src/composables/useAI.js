@@ -16,6 +16,35 @@ export async function askAI(userMessage) {
   const lastReflection = store.reflections[store.reflections.length - 1]
   const bestStreak = Math.max(0, ...store.habits.map((h) => h.streak))
 
+  // цели
+  const activeGoals = store.goals.filter((g) => {
+    const totalSteps = g.steps.length
+    const doneSteps = g.steps.filter((s) => s.done).length
+    return totalSteps === 0 || doneSteps < totalSteps
+  })
+
+  function daysLeft(deadline) {
+    const d = new Date(deadline)
+    const t = new Date()
+    t.setHours(0, 0, 0, 0)
+    return Math.ceil((d - t) / (1000 * 60 * 60 * 24))
+  }
+
+  const goalsInfo =
+    activeGoals
+      .map((g) => {
+        const days = daysLeft(g.deadline)
+        const doneSteps = g.steps.filter((s) => s.done).length
+        const deadlineText =
+          days < 0
+            ? `просрочено на ${Math.abs(days)} дн.`
+            : days === 0
+              ? 'сегодня дедлайн!'
+              : `осталось ${days} дн.`
+        return `- "${g.title}" (${doneSteps}/${g.steps.length} шагов, ${deadlineText})`
+      })
+      .join('\n') || 'нет активных целей'
+
   const context = `
 Ты личный помощник и коуч пользователя в приложении Qadam (в переводе с казахского — "шаг").
 Приложение помогает людям начать действовать и менять жизнь маленькими шагами.
@@ -33,13 +62,16 @@ export async function askAI(userMessage) {
 - Выполнено: ${doneTasks.map((t) => t.text).join(', ') || 'пока ничего'}
 - Осталось: ${undoneTasks.map((t) => t.text).join(', ') || 'все выполнены!'}
 
+АКТИВНЫЕ ЦЕЛИ:
+${goalsInfo}
+
 ${
   lastReflection
     ? `ПОСЛЕДНЯЯ РЕФЛЕКСИЯ (${lastReflection.date}):
 - Настроение: ${lastReflection.mood}
 - Что мешало: ${lastReflection.obstacles?.join(', ') || 'ничего'}
 - Заметка: ${lastReflection.note || 'нет'}`
-    : ''
+    : 'Рефлексий ещё нет'
 }
 `
 
@@ -60,8 +92,6 @@ ${
   })
 
   const data = await response.json()
-  console.log('AI response status:', response.status)
-  console.log('AI response data:', JSON.stringify(data))
   const text = data.content[0].text
   return text
     .replace(/\*\*(.*?)\*\*/g, '$1')
@@ -76,16 +106,46 @@ export async function generateNotifications() {
   const undoneTasks = store.todayTasks.filter((t) => !t.done)
   const lastReflection = store.reflections[store.reflections.length - 1]
 
+  function daysLeft(deadline) {
+    const d = new Date(deadline)
+    const t = new Date()
+    t.setHours(0, 0, 0, 0)
+    return Math.ceil((d - t) / (1000 * 60 * 60 * 24))
+  }
+
+  const activeGoals = store.goals.filter((g) => {
+    const totalSteps = g.steps.length
+    const doneSteps = g.steps.filter((s) => s.done).length
+    return totalSteps === 0 || doneSteps < totalSteps
+  })
+
+  const goalsInfo =
+    activeGoals
+      .map((g) => {
+        const days = daysLeft(g.deadline)
+        const deadlineText =
+          days < 0
+            ? `просрочено на ${Math.abs(days)} дн.`
+            : days === 0
+              ? 'дедлайн сегодня!'
+              : `осталось ${days} дн.`
+        return `"${g.title}" (${deadlineText})`
+      })
+      .join('; ') || 'нет активных целей'
+
   const context = `
-Ты помощник в приложении Qadam. Твоя задача — придумать 4-6 персональных уведомления для пользователя на сегодня.
-Учти его привычки, задачи и прогресс. Уведомления должны быть мотивирующими, короткими (до 100 символов) и в разное время дня.
+Ты помощник в приложении Qadam. Твоя задача — придумать 2-3 персональных уведомления для пользователя на сегодня.
+Учти его привычки, задачи, цели и последнюю рефлексию. Уведомления должны быть мотивирующими, короткими (до 100 символов) и в разное время дня.
 Не ставь уведомления на утро (до 9) и поздний вечер (после 22).
+Если у цели близкий или просроченный дедлайн — обязательно сделай напоминание про неё.
+Если в последней рефлексии пользователь писал о трудностях — мягко спроси как дела сегодня.
 
 Данные пользователя:
 - Выполнено сегодня: ${completedToday.map((h) => h.name).join(', ') || 'пока ничего'}
 - Осталось привычек: ${pendingToday.map((h) => h.name).join(', ') || 'все выполнены'}
 - Невыполненные задачи: ${undoneTasks.map((t) => t.text).join(', ') || 'все выполнены'}
-${lastReflection ? `- Последнее настроение: ${lastReflection.mood}` : ''}
+- Активные цели: ${goalsInfo}
+${lastReflection ? `- Последняя рефлексия (${lastReflection.date}): настроение ${lastReflection.mood}, мешало: ${lastReflection.obstacles?.join(', ') || 'ничего'}, заметка: "${lastReflection.note || ''}"` : '- Рефлексий ещё нет'}
 
 Ответь ТОЛЬКО в формате JSON массива, без лишнего текста:
 [

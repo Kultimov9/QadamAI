@@ -589,7 +589,7 @@ function formatDate(dateStr) {
 }
 .page-header {
   position: sticky;
-  top: 7px;
+  top: 0;
   background: #f9f9f7;
   padding-top: max(env(safe-area-inset-top), 54px);
   padding-left: 24px;

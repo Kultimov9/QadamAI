@@ -5,6 +5,12 @@
   -webkit-tap-highlight-color: transparent;
 }
 
+html {
+  overscroll-behavior: none;
+  overflow: hidden;
+  height: 100%;
+}
+
 body {
   font-family:
     'Inter',
@@ -14,6 +20,9 @@ body {
   background: #f9f9f7;
   color: #1a1a1a;
   -webkit-font-smoothing: antialiased;
+  overscroll-behavior: none;
+  overflow: hidden;
+  height: 100%;
 }
 
 button {
@@ -41,4 +50,11 @@ select {
 .reflection-view,
 .progress-view {
   padding-top: max(60px, env(safe-area-inset-top) + 16px);
+}
+
+#app {
+  height: 100%;
+  overflow-y: auto;
+  overscroll-behavior: none;
+  -webkit-overflow-scrolling: touch;
 }

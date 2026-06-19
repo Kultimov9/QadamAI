@@ -9,3 +9,14 @@ const pinia = createPinia()
 pinia.use(piniaPluginPersistedstate)
 
 createApp(App).use(pinia).use(router).mount('#app')
+
+// Отключить bounce на iOS
+document.addEventListener(
+  'touchmove',
+  (e) => {
+    if (e.target === document.documentElement || e.target === document.body) {
+      e.preventDefault()
+    }
+  },
+  { passive: false },
+)
