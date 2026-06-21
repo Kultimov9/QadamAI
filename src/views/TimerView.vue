@@ -49,7 +49,7 @@ const router = useRouter()
 const route = useRoute()
 const store = useHabitsStore()
 
-const habit = computed(() => store.habits.find((h) => h.id === Number(route.params.id)))
+const habit = computed(() => store.habits.find((h) => h.id === route.params.id))
 const totalSeconds = computed(() => (habit.value?.duration || 5) * 60)
 
 const secondsLeft = ref(totalSeconds.value)

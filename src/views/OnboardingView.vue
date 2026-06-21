@@ -83,19 +83,11 @@ function toggleHabit(habit) {
   else selectedHabits.value.splice(idx, 1)
 }
 
-function finish() {
-  store.habits = []
-  selectedHabits.value.forEach((h, index) => {
-    store.habits.push({
-      id: index + 1,
-      name: h.name,
-      emoji: h.emoji,
-      duration: h.duration,
-      streak: 0,
-      completedDates: [],
-    })
-  })
-  store.setOnboarded()
+async function finish() {
+  for (const h of selectedHabits.value) {
+    await store.addHabit(h.name, h.emoji, h.duration)
+  }
+  await store.setOnboarded()
   router.replace('/')
 }
 </script>
