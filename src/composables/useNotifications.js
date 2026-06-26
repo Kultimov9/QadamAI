@@ -32,7 +32,7 @@ export async function setupNotifications() {
     },
     ...store.customNotifications.map((n) => ({
       id: n.id,
-      title: 'Qadam ✨',
+      title: 'Oyan AI ✨',
       body: n.text,
       schedule: {
         on: { hour: n.hour, minute: n.minute || 0 },

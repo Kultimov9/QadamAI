@@ -1,7 +1,7 @@
 <template>
   <div class="auth-view">
     <div class="auth-content">
-      <h1 class="title">Qadam</h1>
+      <h1 class="title">Oyan AI</h1>
       <p class="subtitle">{{ isLogin ? 'Войди в аккаунт' : 'Создай аккаунт' }}</p>
 
       <input v-model="email" type="email" class="input" placeholder="Email" autocomplete="email" />
