@@ -267,12 +267,12 @@ function habitProgress(count) {
 .title {
   font-size: 28px;
   font-weight: 600;
-  color: #1a1a1a;
+  color: #ffffff;
   margin: 0;
 }
 .tabs {
   display: flex;
-  background: #f0f0ee;
+  background: #2a2a2a;
   border-radius: 12px;
   padding: 4px;
   gap: 4px;
@@ -286,12 +286,12 @@ function habitProgress(count) {
   font-weight: 500;
   cursor: pointer;
   background: transparent;
-  color: #aaa;
+  color: #9a9a92;
   transition: all 0.2s;
 }
 .tab.active {
-  background: #fff;
-  color: #534ab7;
+  background: #1a1a1a;
+  color: #f5f0e8;
 }
 .section {
   display: flex;
@@ -300,7 +300,7 @@ function habitProgress(count) {
 }
 .section-label {
   font-size: 12px;
-  color: #aaa;
+  color: #9a9a92;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   margin: 0;
@@ -314,10 +314,10 @@ function habitProgress(count) {
   display: flex;
   align-items: center;
   gap: 14px;
-  background: #fff;
+  background: #1a1a1a;
   border-radius: 16px;
   padding: 14px 16px;
-  border: 1px solid #f0f0ee;
+  border: 1px solid #2a2a2a;
   cursor: pointer;
 }
 .habit-card:active {
@@ -336,35 +336,35 @@ function habitProgress(count) {
 .name {
   font-size: 15px;
   font-weight: 500;
-  color: #1a1a1a;
+  color: #ffffff;
   margin: 0;
 }
 .duration,
 .streak {
   font-size: 12px;
-  color: #aaa;
+  color: #9a9a92;
   margin: 2px 0 0;
 }
 .streak {
-  color: #f59e0b;
+  color: #f5f0e8;
 }
 .delete-btn {
   background: none;
   border: none;
-  color: #ddd;
+  color: #5a5a55;
   cursor: pointer;
   padding: 4px;
   display: flex;
   align-items: center;
 }
 .delete-btn:active {
-  color: #ff4444;
+  color: #9a9a92;
 }
 .add-form {
-  background: #fff;
+  background: #1a1a1a;
   border-radius: 16px;
   padding: 16px;
-  border: 1px solid #f0f0ee;
+  border: 1px solid #2a2a2a;
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -378,30 +378,38 @@ function habitProgress(count) {
   width: 48px;
   font-size: 24px;
   text-align: center;
-  border: 1px solid #eee;
+  border: 1px solid #2a2a2a;
   border-radius: 10px;
   padding: 8px;
   outline: none;
+  background: #1a1a1a;
+  color: #ffffff;
 }
 .name-input {
   flex: 1;
-  border: 1px solid #eee;
+  border: 1px solid #2a2a2a;
   border-radius: 10px;
   padding: 10px 12px;
   font-size: 15px;
   outline: none;
+  background: #1a1a1a;
+  color: #ffffff;
+}
+.name-input::placeholder {
+  color: #5a5a55;
 }
 .duration-label {
   font-size: 13px;
-  color: #888;
+  color: #9a9a92;
   min-width: 70px;
 }
 .slider {
   flex: 1;
+  accent-color: #f5f0e8;
 }
 .add-btn {
-  background: #534ab7;
-  color: #fff;
+  background: #f5f0e8;
+  color: #0a0a0a;
   border: none;
   border-radius: 12px;
   padding: 14px;
@@ -410,10 +418,10 @@ function habitProgress(count) {
   cursor: pointer;
 }
 .notif-card {
-  background: #fff;
+  background: #1a1a1a;
   border-radius: 16px;
   padding: 16px;
-  border: 1px solid #f0f0ee;
+  border: 1px solid #2a2a2a;
   display: flex;
   flex-direction: column;
   gap: 14px;
@@ -425,16 +433,16 @@ function habitProgress(count) {
 }
 .notif-label {
   font-size: 14px;
-  color: #333;
+  color: #ffffff;
 }
 .time-select {
-  border: 1px solid #eee;
+  border: 1px solid #2a2a2a;
   border-radius: 10px;
   padding: 8px 12px;
   font-size: 14px;
-  color: #534ab7;
+  color: #f5f0e8;
   outline: none;
-  background: #eeedfe;
+  background: #1a1a1a;
 }
 .stats-grid {
   display: grid;
@@ -442,31 +450,31 @@ function habitProgress(count) {
   gap: 10px;
 }
 .stat-card {
-  background: #fff;
+  background: #1a1a1a;
   border-radius: 16px;
   padding: 16px;
-  border: 1px solid #f0f0ee;
+  border: 1px solid #2a2a2a;
   text-align: center;
 }
 .stat-num {
   font-size: 32px;
   font-weight: 600;
-  color: #534ab7;
+  color: #f5f0e8;
   margin: 0;
 }
 .stat-label {
   font-size: 12px;
-  color: #aaa;
+  color: #9a9a92;
   margin: 4px 0 0;
 }
 .bar-chart {
   display: flex;
   align-items: flex-end;
   gap: 8px;
-  background: #fff;
+  background: #1a1a1a;
   border-radius: 16px;
   padding: 16px;
-  border: 1px solid #f0f0ee;
+  border: 1px solid #2a2a2a;
   height: 140px;
 }
 .bar-col {
@@ -485,16 +493,16 @@ function habitProgress(count) {
 }
 .bar {
   width: 100%;
-  background: #f0f0ee;
+  background: #2a2a2a;
   border-radius: 6px;
   min-height: 4px;
 }
 .bar.active {
-  background: #534ab7;
+  background: #f5f0e8;
 }
 .bar-label {
   font-size: 11px;
-  color: #aaa;
+  color: #9a9a92;
 }
 .habit-stats {
   display: flex;
@@ -502,10 +510,10 @@ function habitProgress(count) {
   gap: 10px;
 }
 .habit-stat-card {
-  background: #fff;
+  background: #1a1a1a;
   border-radius: 16px;
   padding: 14px 16px;
-  border: 1px solid #f0f0ee;
+  border: 1px solid #2a2a2a;
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -522,28 +530,28 @@ function habitProgress(count) {
   flex: 1;
   font-size: 14px;
   font-weight: 500;
-  color: #1a1a1a;
+  color: #ffffff;
 }
 .habit-streak-stat {
   font-size: 13px;
-  color: #f59e0b;
+  color: #f5f0e8;
 }
 .progress-bar-wrap {
   width: 100%;
   height: 6px;
-  background: #f0f0ee;
+  background: #2a2a2a;
   border-radius: 10px;
   overflow: hidden;
 }
 .progress-bar {
   height: 100%;
-  background: #534ab7;
+  background: #f5f0e8;
   border-radius: 10px;
   min-width: 4px;
 }
 .habit-count {
   font-size: 11px;
-  color: #aaa;
+  color: #9a9a92;
   margin: 0;
 }
 .modal-overlay {
@@ -557,7 +565,7 @@ function habitProgress(count) {
   padding: 24px;
 }
 .modal {
-  background: #fff;
+  background: #1a1a1a;
   border-radius: 20px;
   padding: 24px;
   width: 100%;
@@ -569,12 +577,12 @@ function habitProgress(count) {
 .modal-title {
   font-size: 17px;
   font-weight: 600;
-  color: #1a1a1a;
+  color: #ffffff;
   margin: 0;
 }
 .modal-desc {
   font-size: 14px;
-  color: #888;
+  color: #9a9a92;
   margin: 0;
 }
 .modal-actions {
@@ -584,29 +592,29 @@ function habitProgress(count) {
 }
 .modal-cancel {
   flex: 1;
-  background: #f0f0ee;
+  background: #2a2a2a;
   border: none;
   border-radius: 12px;
   padding: 14px;
   font-size: 15px;
-  color: #555;
+  color: #9a9a92;
   cursor: pointer;
 }
 .modal-confirm {
   flex: 1;
-  background: #ff4444;
+  background: #9a9a92;
   border: none;
   border-radius: 12px;
   padding: 14px;
   font-size: 15px;
-  color: #fff;
+  color: #0a0a0a;
   font-weight: 500;
   cursor: pointer;
 }
 .page-header {
   position: sticky;
   top: 0;
-  background: #f9f9f7;
+  background: #0a0a0a;
   padding: env(safe-area-inset-top) 24px 12px;
   padding-top: max(env(safe-area-inset-top), 54px);
   z-index: 10;

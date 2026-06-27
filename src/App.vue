@@ -53,7 +53,7 @@ onMounted(async () => {
   margin: 0 auto;
   min-height: 100vh;
   position: relative;
-  background: #f9f9f7;
+  background: #0a0a0a;
   padding-bottom: env(safe-area-inset-bottom);
 }
 </style>

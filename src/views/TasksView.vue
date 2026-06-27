@@ -61,7 +61,7 @@
               @click="store.toggleTask(task.id)"
             >
               <div class="checkbox checked">
-                <Check :size="12" color="#fff" />
+                <Check :size="12" color="#0a0a0a" />
               </div>
               <span class="task-text">{{ task.text }}</span>
               <button class="delete-btn" @click.stop="store.removeTask(task.id)">
@@ -149,7 +149,7 @@
                 @click="store.toggleStep(goal.id, step.id)"
               >
                 <div class="checkbox" :class="{ checked: step.done }">
-                  <Check v-if="step.done" :size="12" color="#fff" />
+                  <Check v-if="step.done" :size="12" color="#0a0a0a" />
                 </div>
                 <span class="step-text" :class="{ done: step.done }">{{ step.text }}</span>
                 <button class="delete-btn" @click.stop="store.removeStep(goal.id, step.id)">
@@ -268,7 +268,7 @@ function formatDate(dateStr) {
 }
 .tabs {
   display: flex;
-  background: #f0f0ee;
+  background: #2a2a2a;
   border-radius: 12px;
   padding: 4px;
   gap: 4px;
@@ -282,12 +282,12 @@ function formatDate(dateStr) {
   font-weight: 500;
   cursor: pointer;
   background: transparent;
-  color: #aaa;
+  color: #9a9a92;
   transition: all 0.2s;
 }
 .tab.active {
-  background: #fff;
-  color: #534ab7;
+  background: #1a1a1a;
+  color: #f5f0e8;
 }
 .header {
   display: flex;
@@ -297,24 +297,24 @@ function formatDate(dateStr) {
 .title {
   font-size: 28px;
   font-weight: 600;
-  color: #1a1a1a;
+  color: #ffffff;
   margin: 0;
 }
 .subtitle {
   font-size: 14px;
-  color: #aaa;
+  color: #9a9a92;
   margin: 0;
 }
 .progress-bar-wrap {
   width: 100%;
   height: 6px;
-  background: #f0f0ee;
+  background: #2a2a2a;
   border-radius: 10px;
   overflow: hidden;
 }
 .progress-bar {
   height: 100%;
-  background: #534ab7;
+  background: #f5f0e8;
   border-radius: 10px;
   transition: width 0.3s ease;
 }
@@ -325,29 +325,29 @@ function formatDate(dateStr) {
 }
 .task-input {
   flex: 1;
-  border: 1px solid #eee;
+  border: 1px solid #2a2a2a;
   border-radius: 12px;
   padding: 12px 16px;
   font-size: 15px;
   outline: none;
-  background: #fff;
-  color: #1a1a1a;
+  background: #1a1a1a;
+  color: #ffffff;
   width: 100%;
 }
 .task-input:focus {
-  border-color: #534ab7;
+  border-color: #f5f0e8;
 }
 .add-btn {
   width: 44px;
   height: 44px;
-  background: #534ab7;
+  background: #f5f0e8;
   border: none;
   border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  color: #fff;
+  color: #0a0a0a;
   flex-shrink: 0;
 }
 .add-btn:active {
@@ -360,7 +360,7 @@ function formatDate(dateStr) {
 }
 .section-label {
   font-size: 12px;
-  color: #aaa;
+  color: #9a9a92;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   margin: 0;
@@ -374,10 +374,10 @@ function formatDate(dateStr) {
   display: flex;
   align-items: center;
   gap: 12px;
-  background: #fff;
+  background: #1a1a1a;
   border-radius: 14px;
   padding: 14px 16px;
-  border: 1px solid #f0f0ee;
+  border: 1px solid #2a2a2a;
   cursor: pointer;
 }
 .task-card:active {
@@ -390,36 +390,36 @@ function formatDate(dateStr) {
   width: 22px;
   height: 22px;
   border-radius: 50%;
-  border: 2px solid #ddd;
+  border: 2px solid #2a2a2a;
   flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 .checkbox.checked {
-  background: #534ab7;
-  border-color: #534ab7;
+  background: #f5f0e8;
+  border-color: #f5f0e8;
 }
 .task-text {
   flex: 1;
   font-size: 15px;
-  color: #1a1a1a;
+  color: #ffffff;
 }
 .task-card.done .task-text {
   text-decoration: line-through;
-  color: #aaa;
+  color: #9a9a92;
 }
 .delete-btn {
   background: none;
   border: none;
-  color: #ddd;
+  color: #5a5a55;
   cursor: pointer;
   padding: 4px;
   display: flex;
   align-items: center;
 }
 .delete-btn:active {
-  color: #ff4444;
+  color: #9a9a92;
 }
 .empty {
   display: flex;
@@ -431,7 +431,7 @@ function formatDate(dateStr) {
 }
 .empty-text {
   font-size: 15px;
-  color: #aaa;
+  color: #9a9a92;
   text-align: center;
   line-height: 1.5;
   margin: 0;
@@ -440,12 +440,12 @@ function formatDate(dateStr) {
 .congrats {
   text-align: center;
   padding: 16px;
-  background: #eeedfe;
+  background: #1a1a1a;
   border-radius: 16px;
 }
 .congrats-text {
   font-size: 16px;
-  color: #534ab7;
+  color: #f5f0e8;
   font-weight: 500;
 }
 .add-goal-form {
@@ -459,19 +459,19 @@ function formatDate(dateStr) {
   gap: 12px;
 }
 .goal-card {
-  background: #fff;
+  background: #1a1a1a;
   border-radius: 16px;
   padding: 16px;
-  border: 1px solid #f0f0ee;
+  border: 1px solid #2a2a2a;
   display: flex;
   flex-direction: column;
   gap: 12px;
 }
 .goal-card.urgent {
-  border-color: #fac775;
+  border-color: #2a2a2a;
 }
 .goal-card.overdue {
-  border-color: #f09595;
+  border-color: #2a2a2a;
 }
 .goal-header {
   display: flex;
@@ -486,7 +486,7 @@ function formatDate(dateStr) {
 .goal-title {
   font-size: 16px;
   font-weight: 600;
-  color: #1a1a1a;
+  color: #ffffff;
 }
 .goal-meta {
   display: flex;
@@ -495,37 +495,37 @@ function formatDate(dateStr) {
 }
 .deadline-badge {
   font-size: 12px;
-  color: #888;
+  color: #9a9a92;
 }
 .deadline-badge.urgent {
-  color: #ba7517;
+  color: #9a9a92;
 }
 .deadline-badge.overdue {
-  color: #a32d2d;
+  color: #9a9a92;
 }
 .progress-text {
   font-size: 12px;
   font-weight: 600;
-  color: #534ab7;
+  color: #f5f0e8;
 }
 .goal-progress-wrap {
   width: 100%;
   height: 6px;
-  background: #f0f0ee;
+  background: #2a2a2a;
   border-radius: 10px;
   overflow: hidden;
 }
 .goal-progress-bar {
   height: 100%;
-  background: #534ab7;
+  background: #f5f0e8;
   border-radius: 10px;
   transition: width 0.3s ease;
 }
 .goal-progress-bar.urgent {
-  background: #ba7517;
+  background: #9a9a92;
 }
 .goal-progress-bar.overdue {
-  background: #a32d2d;
+  background: #9a9a92;
 }
 .steps-list {
   display: flex;
@@ -541,11 +541,11 @@ function formatDate(dateStr) {
 .step-text {
   flex: 1;
   font-size: 14px;
-  color: #333;
+  color: #ffffff;
 }
 .step-text.done {
   text-decoration: line-through;
-  color: #aaa;
+  color: #9a9a92;
 }
 .add-step-row {
   display: flex;
@@ -554,42 +554,42 @@ function formatDate(dateStr) {
 }
 .step-input {
   flex: 1;
-  border: 1px solid #eee;
+  border: 1px solid #2a2a2a;
   border-radius: 10px;
   padding: 8px 12px;
   font-size: 14px;
   outline: none;
-  background: #f9f9f7;
+  background: #0a0a0a;
 }
 .step-input:focus {
-  border-color: #534ab7;
+  border-color: #f5f0e8;
 }
 .add-step-btn {
   width: 34px;
   height: 34px;
-  background: #eeedfe;
+  background: #1a1a1a;
   border: none;
   border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  color: #534ab7;
+  color: #f5f0e8;
   flex-shrink: 0;
 }
 .goal-card.completed {
-  border-color: #1d9e75;
+  border-color: #f5f0e8;
 }
 .deadline-badge.completed {
-  color: #1d9e75;
+  color: #f5f0e8;
 }
 .goal-progress-bar.completed {
-  background: #1d9e75;
+  background: #f5f0e8;
 }
 .page-header {
   position: sticky;
   top: 0;
-  background: #f9f9f7;
+  background: #0a0a0a;
   padding-top: max(env(safe-area-inset-top), 54px);
   padding-left: 24px;
   padding-right: 24px;
@@ -609,24 +609,24 @@ function formatDate(dateStr) {
 .empty-title {
   font-size: 20px;
   font-weight: 600;
-  color: #1a1a1a;
+  color: #ffffff;
   text-align: center;
   margin: 0;
 }
 
 .goal-input {
   width: 100%;
-  border: 1px solid #eee;
+  border: 1px solid #2a2a2a;
   border-radius: 12px;
   padding: 12px 16px;
   font-size: 15px;
   outline: none;
-  background: #fff;
-  color: #1a1a1a;
+  background: #1a1a1a;
+  color: #ffffff;
   box-sizing: border-box;
 }
 .goal-input:focus {
-  border-color: #534ab7;
+  border-color: #f5f0e8;
 }
 
 .goal-date-row {
@@ -636,17 +636,17 @@ function formatDate(dateStr) {
 }
 .date-label {
   flex: 1;
-  border: 1px solid #eee;
+  border: 1px solid #2a2a2a;
   border-radius: 12px;
   padding: 12px 16px;
-  background: #fff;
+  background: #1a1a1a;
   cursor: pointer;
   position: relative;
   display: block;
 }
 .date-label-text {
   font-size: 15px;
-  color: #888;
+  color: #9a9a92;
   display: block;
 }
 .date-hidden {

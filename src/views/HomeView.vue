@@ -33,10 +33,10 @@
     </div>
 
     <button class="secondary-btn" @click="router.push('/habits')">Все привычки</button>
-    <div class="challenge-card" style="background: #fff; border: 1px solid #f0f0ee">
+    <div class="challenge-card" style="background: #1a1a1a; border: 1px solid #2a2a2a">
       <p class="challenge-label">📅 Сравнение со вчера</p>
-      <p class="challenge-text" style="color: #1a1a1a">{{ yesterdayMessage }}</p>
-      <div class="challenge-bar-wrap" style="background: #f0f0ee">
+      <p class="challenge-text" style="color: #ffffff">{{ yesterdayMessage }}</p>
+      <div class="challenge-bar-wrap" style="background: #2a2a2a">
         <div
           class="challenge-bar"
           :style="{
@@ -48,8 +48,8 @@
         />
       </div>
       <div style="display: flex; justify-content: space-between">
-        <p class="challenge-sub" style="color: #aaa">Вчера: {{ yesterdayStats.done }}</p>
-        <p class="challenge-sub" style="color: #534ab7">Сегодня: {{ todayCompleted.length }}</p>
+        <p class="challenge-sub" style="color: #9a9a92">Вчера: {{ yesterdayStats.done }}</p>
+        <p class="challenge-sub" style="color: #f5f0e8">Сегодня: {{ todayCompleted.length }}</p>
       </div>
     </div>
 
@@ -142,19 +142,19 @@ const challengeProgress = computed(() => {
 }
 .greeting {
   font-size: 14px;
-  color: #888;
+  color: #9a9a92;
   margin: 0 0 6px;
 }
 .title {
   font-size: 26px;
   font-weight: 600;
   line-height: 1.3;
-  color: #1a1a1a;
+  color: #ffffff;
   margin: 0;
 }
 .start-btn {
-  background: #534ab7;
-  color: #fff;
+  background: #f5f0e8;
+  color: #0a0a0a;
   border: none;
   border-radius: 16px;
   padding: 18px;
@@ -173,15 +173,15 @@ const challengeProgress = computed(() => {
   gap: 8px;
 }
 .tag {
-  background: #eeedfe;
-  color: #3c3489;
+  background: #1a1a1a;
+  color: #f5f0e8;
   font-size: 13px;
   padding: 6px 12px;
   border-radius: 20px;
 }
 .section-label {
   font-size: 12px;
-  color: #aaa;
+  color: #9a9a92;
   margin: 0 0 8px;
 }
 .completed-list {
@@ -194,29 +194,29 @@ const challengeProgress = computed(() => {
   align-items: center;
   gap: 10px;
   font-size: 14px;
-  color: #555;
+  color: #9a9a92;
 }
 .check {
-  color: #1d9e75;
+  color: #f5f0e8;
   font-weight: 600;
 }
 .streak {
   margin-left: auto;
   font-size: 12px;
-  color: #1d9e75;
+  color: #f5f0e8;
 }
 .secondary-btn {
-  background: #f0f0ee;
+  background: #2a2a2a;
   border: none;
   border-radius: 12px;
   padding: 14px;
   font-size: 15px;
-  color: #555;
+  color: #9a9a92;
   cursor: pointer;
   margin-top: 8px;
 }
 .challenge-card {
-  background: #eeedfe;
+  background: #1a1a1a;
   border-radius: 16px;
   padding: 16px;
   display: flex;
@@ -226,37 +226,37 @@ const challengeProgress = computed(() => {
 .challenge-label {
   font-size: 12px;
   font-weight: 600;
-  color: #534ab7;
+  color: #f5f0e8;
   margin: 0;
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
 .challenge-text {
   font-size: 15px;
-  color: #3c3489;
+  color: #f5f0e8;
   margin: 0;
   line-height: 1.4;
 }
 .challenge-num {
   font-weight: 600;
-  color: #534ab7;
+  color: #f5f0e8;
 }
 .challenge-bar-wrap {
   width: 100%;
   height: 6px;
-  background: #afa9ec;
+  background: #5a5a55;
   border-radius: 10px;
   overflow: hidden;
 }
 .challenge-bar {
   height: 100%;
-  background: #534ab7;
+  background: #f5f0e8;
   border-radius: 10px;
   transition: width 0.3s ease;
 }
 .challenge-sub {
   font-size: 12px;
-  color: #7f77dd;
+  color: #9a9a92;
   margin: 0;
 }
 </style>

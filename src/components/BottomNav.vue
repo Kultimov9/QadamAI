@@ -42,10 +42,10 @@ const route = useRoute()
   width: 100%;
   max-width: 430px;
   display: flex;
-  background: rgba(255, 255, 255, 0.92);
+  background: rgba(26, 26, 26, 0.92);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border-top: 0.5px solid rgba(0, 0, 0, 0.08);
+  border-top: 0.5px solid rgba(255, 255, 255, 0.08);
   padding: 10px 0 max(28px, env(safe-area-inset-bottom));
 }
 .nav-item {
@@ -55,11 +55,11 @@ const route = useRoute()
   align-items: center;
   gap: 4px;
   text-decoration: none;
-  color: #c0bfbd;
+  color: #5a5a55;
   transition: color 0.2s;
 }
 .nav-item.active {
-  color: #534ab7;
+  color: #f5f0e8;
 }
 .label {
   font-size: 10px;

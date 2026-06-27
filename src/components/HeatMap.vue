@@ -61,7 +61,7 @@ function getCellClass(count) {
 }
 .heatmap-label {
   font-size: 12px;
-  color: #aaa;
+  color: #9a9a92;
   margin: 0;
 }
 .grid {
@@ -74,16 +74,16 @@ function getCellClass(count) {
   border-radius: 4px;
 }
 .c0 {
-  background: #f0f0ee;
+  background: #2a2a2a;
 }
 .c1 {
-  background: #9fe1cb;
+  background: #4a4a45;
 }
 .c2 {
-  background: #1d9e75;
+  background: #8a8a82;
 }
 .c3 {
-  background: #0f6e56;
+  background: #f5f0e8;
 }
 .legend {
   display: flex;
@@ -92,7 +92,7 @@ function getCellClass(count) {
 }
 .legend-label {
   font-size: 11px;
-  color: #ccc;
+  color: #5a5a55;
 }
 .legend-cell {
   width: 12px;

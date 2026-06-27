@@ -167,12 +167,12 @@ function moodEmoji(value) {
 .title {
   font-size: 28px;
   font-weight: 600;
-  color: #1a1a1a;
+  color: #ffffff;
   margin: 0;
 }
 .subtitle {
   font-size: 14px;
-  color: #aaa;
+  color: #9a9a92;
   margin: 4px 0 0;
 }
 .section {
@@ -182,7 +182,7 @@ function moodEmoji(value) {
 }
 .section-label {
   font-size: 12px;
-  color: #aaa;
+  color: #9a9a92;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   margin: 0;
@@ -194,15 +194,15 @@ function moodEmoji(value) {
 .mood-btn {
   flex: 1;
   font-size: 28px;
-  background: #f0f0ee;
+  background: #2a2a2a;
   border: 2px solid transparent;
   border-radius: 14px;
   padding: 12px 0;
   cursor: pointer;
 }
 .mood-btn.selected {
-  border-color: #534ab7;
-  background: #eeedfe;
+  border-color: #f5f0e8;
+  background: #1a1a1a;
 }
 .obstacle-list {
   display: flex;
@@ -210,29 +210,29 @@ function moodEmoji(value) {
   gap: 8px;
 }
 .obstacle-btn {
-  background: #f0f0ee;
+  background: #2a2a2a;
   border: 2px solid transparent;
   border-radius: 20px;
   padding: 8px 14px;
   font-size: 13px;
-  color: #555;
+  color: #9a9a92;
   cursor: pointer;
 }
 .obstacle-btn.selected {
-  border-color: #534ab7;
-  background: #eeedfe;
-  color: #3c3489;
+  border-color: #f5f0e8;
+  background: #1a1a1a;
+  color: #f5f0e8;
 }
 .note-input {
-  border: 1px solid #eee;
+  border: 1px solid #2a2a2a;
   border-radius: 12px;
   padding: 12px;
   font-size: 14px;
-  color: #333;
+  color: #ffffff;
   resize: none;
   outline: none;
   font-family: inherit;
-  background: #fff;
+  background: #1a1a1a;
 }
 .stats {
   display: grid;
@@ -240,26 +240,26 @@ function moodEmoji(value) {
   gap: 10px;
 }
 .stat-card {
-  background: #fff;
+  background: #1a1a1a;
   border-radius: 14px;
   padding: 14px 10px;
   text-align: center;
-  border: 1px solid #f0f0ee;
+  border: 1px solid #2a2a2a;
 }
 .stat-num {
   font-size: 24px;
   font-weight: 600;
-  color: #534ab7;
+  color: #f5f0e8;
   margin: 0;
 }
 .stat-label {
   font-size: 11px;
-  color: #aaa;
+  color: #9a9a92;
   margin: 4px 0 0;
 }
 .save-btn {
-  background: #534ab7;
-  color: #fff;
+  background: #f5f0e8;
+  color: #0a0a0a;
   border: none;
   border-radius: 16px;
   padding: 18px;
@@ -276,10 +276,10 @@ function moodEmoji(value) {
   gap: 12px;
 }
 .history-card {
-  background: #fff;
+  background: #1a1a1a;
   border-radius: 16px;
   padding: 14px 16px;
-  border: 1px solid #f0f0ee;
+  border: 1px solid #2a2a2a;
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -292,7 +292,7 @@ function moodEmoji(value) {
 .history-date {
   font-size: 14px;
   font-weight: 500;
-  color: #1a1a1a;
+  color: #ffffff;
 }
 .history-mood {
   font-size: 22px;
@@ -303,21 +303,21 @@ function moodEmoji(value) {
   gap: 6px;
 }
 .history-tag {
-  background: #f0f0ee;
+  background: #2a2a2a;
   border-radius: 20px;
   padding: 4px 10px;
   font-size: 12px;
-  color: #555;
+  color: #9a9a92;
 }
 .history-note {
   font-size: 13px;
-  color: #888;
+  color: #9a9a92;
   margin: 0;
   font-style: italic;
 }
 .success-banner {
-  background: #e1f5ee;
-  color: #0f6e56;
+  background: #1a1a1a;
+  color: #f5f0e8;
   border-radius: 12px;
   padding: 14px 16px;
   font-size: 15px;
@@ -325,12 +325,12 @@ function moodEmoji(value) {
   text-align: center;
 }
 .save-btn:disabled {
-  background: #1d9e75;
+  background: #f5f0e8;
 }
 .page-header {
   position: sticky;
   top: 0;
-  background: #f9f9f7;
+  background: #0a0a0a;
   padding: env(safe-area-inset-top) 24px 12px;
   padding-top: max(env(safe-area-inset-top), 54px);
   z-index: 10;

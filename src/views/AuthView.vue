@@ -81,7 +81,7 @@ async function handleAuth() {
   align-items: center;
   justify-content: center;
   padding: 24px;
-  background: linear-gradient(160deg, #1a1040 0%, #2d1f6e 50%, #3d2a8a 100%);
+  background: linear-gradient(160deg, #0a0a0a 0%, #1a1a1a 50%, #2a2a2a 100%);
 }
 .auth-content {
   width: 100%;
@@ -119,14 +119,14 @@ async function handleAuth() {
   border-color: rgba(255, 255, 255, 0.5);
 }
 .error {
-  color: #ff8a8a;
+  color: #f5f0e8;
   font-size: 13px;
   text-align: center;
   margin: 0;
 }
 .btn {
-  background: #fff;
-  color: #534ab7;
+  background: #f5f0e8;
+  color: #0a0a0a;
   border: none;
   border-radius: 14px;
   padding: 16px;

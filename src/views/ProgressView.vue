@@ -123,7 +123,7 @@ function habitProgress(count) {
 .title {
   font-size: 28px;
   font-weight: 600;
-  color: #1a1a1a;
+  color: #ffffff;
   margin: 0;
 }
 .stats-grid {
@@ -132,21 +132,21 @@ function habitProgress(count) {
   gap: 10px;
 }
 .stat-card {
-  background: #fff;
+  background: #1a1a1a;
   border-radius: 16px;
   padding: 16px;
-  border: 1px solid #f0f0ee;
+  border: 1px solid #2a2a2a;
   text-align: center;
 }
 .stat-num {
   font-size: 32px;
   font-weight: 600;
-  color: #534ab7;
+  color: #f5f0e8;
   margin: 0;
 }
 .stat-label {
   font-size: 12px;
-  color: #aaa;
+  color: #9a9a92;
   margin: 4px 0 0;
 }
 .section {
@@ -156,7 +156,7 @@ function habitProgress(count) {
 }
 .section-label {
   font-size: 12px;
-  color: #aaa;
+  color: #9a9a92;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   margin: 0;
@@ -165,10 +165,10 @@ function habitProgress(count) {
   display: flex;
   align-items: flex-end;
   gap: 8px;
-  background: #fff;
+  background: #1a1a1a;
   border-radius: 16px;
   padding: 16px;
-  border: 1px solid #f0f0ee;
+  border: 1px solid #2a2a2a;
   height: 140px;
 }
 .bar-col {
@@ -187,17 +187,17 @@ function habitProgress(count) {
 }
 .bar {
   width: 100%;
-  background: #f0f0ee;
+  background: #2a2a2a;
   border-radius: 6px;
   min-height: 4px;
   transition: height 0.3s ease;
 }
 .bar.active {
-  background: #534ab7;
+  background: #f5f0e8;
 }
 .bar-label {
   font-size: 11px;
-  color: #aaa;
+  color: #9a9a92;
 }
 .habit-stats {
   display: flex;
@@ -205,10 +205,10 @@ function habitProgress(count) {
   gap: 10px;
 }
 .habit-stat-card {
-  background: #fff;
+  background: #1a1a1a;
   border-radius: 16px;
   padding: 14px 16px;
-  border: 1px solid #f0f0ee;
+  border: 1px solid #2a2a2a;
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -225,29 +225,29 @@ function habitProgress(count) {
   flex: 1;
   font-size: 14px;
   font-weight: 500;
-  color: #1a1a1a;
+  color: #ffffff;
 }
 .habit-streak {
   font-size: 13px;
-  color: #f59e0b;
+  color: #f5f0e8;
 }
 .progress-bar-wrap {
   width: 100%;
   height: 6px;
-  background: #f0f0ee;
+  background: #2a2a2a;
   border-radius: 10px;
   overflow: hidden;
 }
 .progress-bar {
   height: 100%;
-  background: #534ab7;
+  background: #f5f0e8;
   border-radius: 10px;
   transition: width 0.3s ease;
   min-width: 4px;
 }
 .habit-count {
   font-size: 11px;
-  color: #aaa;
+  color: #9a9a92;
   margin: 0;
 }
 </style>

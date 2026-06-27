@@ -141,12 +141,12 @@ function scrollToBottom() {
 .title {
   font-size: 28px;
   font-weight: 600;
-  color: #1a1a1a;
+  color: #ffffff;
   margin: 0;
 }
 .subtitle {
   font-size: 14px;
-  color: #aaa;
+  color: #9a9a92;
   margin: 0;
 }
 .messages {
@@ -170,7 +170,7 @@ function scrollToBottom() {
 }
 .empty-text {
   font-size: 15px;
-  color: #888;
+  color: #9a9a92;
   line-height: 1.5;
   max-width: 280px;
 }
@@ -181,12 +181,12 @@ function scrollToBottom() {
   width: 100%;
 }
 .suggestion-btn {
-  background: #eeedfe;
+  background: #1a1a1a;
   border: none;
   border-radius: 12px;
   padding: 12px 16px;
   font-size: 14px;
-  color: #534ab7;
+  color: #f5f0e8;
   cursor: pointer;
   text-align: left;
 }
@@ -201,24 +201,24 @@ function scrollToBottom() {
 }
 .message.user {
   align-self: flex-end;
-  background: #534ab7;
+  background: #f5f0e8;
   border-bottom-right-radius: 4px;
 }
 .message.assistant {
   align-self: flex-start;
-  background: #f0f0ee;
+  background: #2a2a2a;
   border-bottom-left-radius: 4px;
 }
 .message-text {
   font-size: 15px;
   margin: 0;
-  color: #1a1a1a;
+  color: #ffffff;
 }
 .message.user .message-text {
-  color: #fff;
+  color: #0a0a0a;
 }
 .typing {
-  color: #aaa !important;
+  color: #9a9a92 !important;
   font-style: italic;
 }
 .quick-suggestions {
@@ -228,12 +228,12 @@ function scrollToBottom() {
   margin-top: 4px;
 }
 .quick-btn {
-  background: #eeedfe;
+  background: #1a1a1a;
   border: none;
   border-radius: 20px;
   padding: 8px 14px;
   font-size: 13px;
-  color: #534ab7;
+  color: #f5f0e8;
   cursor: pointer;
 }
 .quick-btn:active {
@@ -249,44 +249,44 @@ function scrollToBottom() {
   display: flex;
   gap: 10px;
   padding: 12px 24px;
-  background: rgba(249, 249, 247, 0.92);
+  background: rgba(26, 26, 26, 0.92);
   backdrop-filter: blur(12px);
-  border-top: 0.5px solid rgba(0, 0, 0, 0.08);
+  border-top: 0.5px solid rgba(255, 255, 255, 0.08);
 }
 .chat-input {
   flex: 1;
-  border: 1px solid #eee;
+  border: 1px solid #2a2a2a;
   border-radius: 12px;
   padding: 12px 16px;
   font-size: 15px;
   outline: none;
-  background: #fff;
-  color: #1a1a1a;
+  background: #1a1a1a;
+  color: #ffffff;
 }
 .chat-input:focus {
-  border-color: #534ab7;
+  border-color: #f5f0e8;
 }
 .send-btn {
   width: 44px;
   height: 44px;
-  background: #534ab7;
+  background: #f5f0e8;
   border: none;
   border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  color: #fff;
+  color: #0a0a0a;
   flex-shrink: 0;
 }
 .send-btn:disabled {
-  background: #ccc;
+  background: #2a2a2a;
 }
 .send-btn:active:not(:disabled) {
   transform: scale(0.95);
 }
 .page-header {
-  background: #f9f9f7;
+  background: #0a0a0a;
   padding-top: max(env(safe-area-inset-top), 0px);
   padding-left: 24px;
   padding-right: 24px;

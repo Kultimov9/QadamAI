@@ -10,13 +10,13 @@
 
     <div class="circle-wrap">
       <svg viewBox="0 0 120 120" class="circle-svg">
-        <circle cx="60" cy="60" r="54" fill="none" stroke="#EEEDFE" stroke-width="8" />
+        <circle cx="60" cy="60" r="54" fill="none" stroke="#1a1a1a" stroke-width="8" />
         <circle
           cx="60"
           cy="60"
           r="54"
           fill="none"
-          stroke="#534AB7"
+          stroke="#f5f0e8"
           stroke-width="8"
           stroke-linecap="round"
           stroke-dasharray="339.3"
@@ -172,7 +172,7 @@ function disableWakeLock() {
   background: none;
   border: none;
   font-size: 15px;
-  color: #534ab7;
+  color: #f5f0e8;
   cursor: pointer;
   padding: 0;
 }
@@ -189,12 +189,12 @@ function disableWakeLock() {
 .habit-name {
   font-size: 22px;
   font-weight: 600;
-  color: #1a1a1a;
+  color: #ffffff;
   margin: 0;
 }
 .hint {
   font-size: 13px;
-  color: #aaa;
+  color: #9a9a92;
   margin: 0;
   text-align: center;
 }
@@ -216,7 +216,7 @@ function disableWakeLock() {
 .timer-text {
   font-size: 42px;
   font-weight: 600;
-  color: #534ab7;
+  color: #f5f0e8;
   z-index: 1;
 }
 .actions {
@@ -227,8 +227,8 @@ function disableWakeLock() {
   margin-top: 16px;
 }
 .main-btn {
-  background: #534ab7;
-  color: #fff;
+  background: #f5f0e8;
+  color: #0a0a0a;
   border: none;
   border-radius: 16px;
   padding: 18px;
@@ -237,26 +237,26 @@ function disableWakeLock() {
   cursor: pointer;
 }
 .main-btn.pause {
-  background: #f0f0ee;
-  color: #534ab7;
+  background: #2a2a2a;
+  color: #f5f0e8;
 }
 .main-btn:active {
   transform: scale(0.98);
 }
 .secondary-btn {
-  background: #f0f0ee;
+  background: #2a2a2a;
   border: none;
   border-radius: 12px;
   padding: 14px;
   font-size: 15px;
-  color: #555;
+  color: #9a9a92;
   cursor: pointer;
 }
 .skip-btn {
   background: none;
   border: none;
   font-size: 14px;
-  color: #ccc;
+  color: #5a5a55;
   cursor: pointer;
   padding: 8px;
 }

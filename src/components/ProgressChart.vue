@@ -75,10 +75,10 @@ onMounted(() => {
         {
           label: 'Привычки',
           data: data.map((d) => d.completed),
-          borderColor: '#534AB7',
-          backgroundColor: 'rgba(83, 74, 183, 0.1)',
+          borderColor: '#f5f0e8',
+          backgroundColor: 'rgba(245, 240, 232, 0.1)',
           borderWidth: 2.5,
-          pointBackgroundColor: '#534AB7',
+          pointBackgroundColor: '#f5f0e8',
           pointRadius: 4,
           pointHoverRadius: 6,
           tension: 0.4,
@@ -87,10 +87,10 @@ onMounted(() => {
         {
           label: 'Streak',
           data: data.map((d) => d.streak),
-          borderColor: '#1D9E75',
-          backgroundColor: 'rgba(29, 158, 117, 0.1)',
+          borderColor: '#9a9a92',
+          backgroundColor: 'rgba(154, 154, 146, 0.1)',
           borderWidth: 2.5,
-          pointBackgroundColor: '#1D9E75',
+          pointBackgroundColor: '#9a9a92',
           pointRadius: 4,
           pointHoverRadius: 6,
           tension: 0.4,
@@ -109,16 +109,16 @@ onMounted(() => {
           position: 'top',
           labels: {
             font: { family: 'Inter', size: 12 },
-            color: '#888',
+            color: '#9a9a92',
             boxWidth: 12,
             padding: 16,
           },
         },
         tooltip: {
-          backgroundColor: '#fff',
-          titleColor: '#1a1a1a',
-          bodyColor: '#555',
-          borderColor: '#f0f0ee',
+          backgroundColor: '#1a1a1a',
+          titleColor: '#ffffff',
+          bodyColor: '#9a9a92',
+          borderColor: '#2a2a2a',
           borderWidth: 1,
           padding: 10,
           titleFont: { family: 'Inter', weight: '600' },
@@ -130,7 +130,7 @@ onMounted(() => {
           grid: { display: false },
           ticks: {
             font: { family: 'Inter', size: 10 },
-            color: '#aaa',
+            color: '#9a9a92',
             maxRotation: 0,
             maxTicksLimit: 7,
           },
@@ -138,11 +138,11 @@ onMounted(() => {
         y: {
           beginAtZero: true,
           grid: {
-            color: 'rgba(0,0,0,0.05)',
+            color: 'rgba(255, 255, 255, 0.06)',
           },
           ticks: {
             font: { family: 'Inter', size: 11 },
-            color: '#aaa',
+            color: '#9a9a92',
             stepSize: 1,
           },
         },
@@ -158,9 +158,9 @@ onUnmounted(() => {
 
 <style scoped>
 .chart-wrap {
-  background: #fff;
+  background: #1a1a1a;
   border-radius: 16px;
   padding: 16px;
-  border: 1px solid #f0f0ee;
+  border: 1px solid #2a2a2a;
 }
 </style>

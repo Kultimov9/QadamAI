@@ -102,11 +102,11 @@ async function finish() {
 }
 
 .onboarding.dark {
-  background: linear-gradient(160deg, #1a1040 0%, #2d1f6e 50%, #3d2a8a 100%);
+  background: linear-gradient(160deg, #0a0a0a 0%, #1a1a1a 50%, #2a2a2a 100%);
 }
 
 .onboarding.light {
-  background: #f9f9f7;
+  background: #0a0a0a;
 }
 
 .slide {
@@ -188,12 +188,12 @@ async function finish() {
 }
 
 .light-title {
-  color: #1a1a1a !important;
+  color: #ffffff !important;
   font-size: 28px;
 }
 
 .light-desc {
-  color: #888 !important;
+  color: #9a9a92 !important;
   font-size: 15px;
 }
 
@@ -210,7 +210,7 @@ async function finish() {
   flex-direction: column;
   align-items: center;
   gap: 4px;
-  background: #fff;
+  background: #1a1a1a;
   border: 2px solid transparent;
   border-radius: 16px;
   padding: 14px 10px;
@@ -220,8 +220,8 @@ async function finish() {
 }
 
 .habit-option.selected {
-  border-color: #534ab7;
-  background: #eeedfe;
+  border-color: #f5f0e8;
+  background: #2a2a2a;
 }
 
 .habit-option:active {
@@ -233,30 +233,30 @@ async function finish() {
 .habit-name {
   font-size: 13px;
   font-weight: 500;
-  color: #1a1a1a;
+  color: #ffffff;
 }
 .habit-duration {
   font-size: 11px;
-  color: #aaa;
+  color: #9a9a92;
 }
 
 .hint {
   font-size: 13px;
-  color: #aaa;
+  color: #9a9a92;
   margin: 0;
   padding: 0 24px;
 }
 
 .light-btn {
-  background: #534ab7 !important;
+  background: #f5f0e8 !important;
   border: none !important;
-  color: #fff !important;
+  color: #0a0a0a !important;
   margin: 0 24px;
   width: calc(100% - 48px);
 }
 
 .light-btn:disabled {
-  background: #ccc !important;
+  background: #2a2a2a !important;
   cursor: default;
 }
 
@@ -281,9 +281,9 @@ async function finish() {
   border-radius: 4px;
 }
 .dot.dot-light {
-  background: #ddd;
+  background: #2a2a2a;
 }
 .dot.dot-light.active {
-  background: #534ab7;
+  background: #f5f0e8;
 }
 </style>
