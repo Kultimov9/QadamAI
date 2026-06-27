@@ -28,7 +28,9 @@ onMounted(async () => {
     data: { session },
   } = await supabase.auth.getSession()
   if (session) {
-    await store.fetchAll()
+    // Тот же общий промис, что ждёт router guard — данные точно на месте,
+    // и двойной загрузки не происходит.
+    await store.ensureLoaded()
 
     const today = new Date().toISOString().split('T')[0]
     await setupNotifications()

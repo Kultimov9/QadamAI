@@ -1,7 +1,7 @@
 <template>
   <div class="auth-view">
+    <img :src="logoUrl" class="logo" alt="Oyan AI" />
     <div class="auth-content">
-      <h1 class="title">Oyan AI</h1>
       <p class="subtitle">{{ isLogin ? 'Войди в аккаунт' : 'Создай аккаунт' }}</p>
 
       <input v-model="email" type="email" class="input" placeholder="Email" autocomplete="email" />
@@ -31,6 +31,7 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { supabase } from '../lib/supabase'
 import { useHabitsStore } from '../stores/habits'
+import logoUrl from '@/assets/logo-wordmark.png'
 
 const router = useRouter()
 const store = useHabitsStore()
@@ -65,7 +66,15 @@ async function handleAuth() {
       if (signUpError) throw signUpError
     }
 
-    router.replace('/')
+    // Сначала подтягиваем данные из Supabase, и только потом решаем, куда вести.
+    // force=true — свежая загрузка под только что вошедшим пользователем.
+    await store.ensureLoaded(true)
+
+    if (store.habits.length > 0 || store.onboarded) {
+      router.replace('/')
+    } else {
+      router.replace('/onboarding')
+    }
   } catch (e) {
     error.value = e.message || 'Что-то пошло не так'
   }
@@ -78,9 +87,10 @@ async function handleAuth() {
 .auth-view {
   min-height: 100vh;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
-  padding: 24px;
+  justify-content: flex-start;
+  padding: 9vh 24px 24px;
   background: linear-gradient(160deg, #0a0a0a 0%, #1a1a1a 50%, #2a2a2a 100%);
 }
 .auth-content {
@@ -89,13 +99,13 @@ async function handleAuth() {
   display: flex;
   flex-direction: column;
   gap: 12px;
+  margin: auto 0;
 }
-.title {
-  font-size: 36px;
-  font-weight: 700;
-  color: #fff;
-  text-align: center;
-  margin: 0;
+.logo {
+  display: block;
+  width: 220px;
+  height: auto;
+  margin: 5vh auto 0;
 }
 .subtitle {
   font-size: 15px;

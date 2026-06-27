@@ -41,8 +41,16 @@ router.beforeEach(async (to) => {
     return '/'
   }
 
-  if (session && !store.onboarded && to.path !== '/onboarding' && to.path !== '/auth') {
-    return '/onboarding'
+  // Данные должны быть загружены из Supabase до решения об онбординге, иначе
+  // после переустановки (пустой localStorage) onboarded=false уведёт на онбординг
+  // ещё до загрузки реальных данных аккаунта.
+  if (session) {
+    await store.ensureLoaded()
+
+    const needsOnboarding = store.habits.length === 0 && !store.onboarded
+    if (needsOnboarding && to.path !== '/onboarding') {
+      return '/onboarding'
+    }
   }
 })
 

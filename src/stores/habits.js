@@ -1,6 +1,11 @@
 import { defineStore } from 'pinia'
 import { supabase } from '../lib/supabase'
 
+// Кэш промиса загрузки данных. Живёт вне state, поэтому не персистится и не
+// сериализуется. Гарантирует, что fetchAll() выполнится один раз, а параллельные
+// вызовы (router guard + App.vue) переиспользуют один и тот же промис.
+let loadPromise = null
+
 export const useHabitsStore = defineStore('habits', {
   state: () => ({
     userId: null,
@@ -80,8 +85,18 @@ export const useHabitsStore = defineStore('habits', {
       this.onboarded = profileRes.data?.onboarded || false
     },
 
+    // Загружает данные из Supabase один раз за сессию. Используется роутером и
+    // App.vue, чтобы решение о редиректе принималось только после загрузки.
+    // force=true сбрасывает кэш (например, после входа под другим аккаунтом).
+    async ensureLoaded(force = false) {
+      if (force) loadPromise = null
+      if (!loadPromise) loadPromise = this.fetchAll()
+      await loadPromise
+    },
+
     async logout() {
       await supabase.auth.signOut()
+      loadPromise = null
       this.userId = null
       this.habits = []
       this.tasks = []
