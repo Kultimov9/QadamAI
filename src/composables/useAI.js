@@ -4,10 +4,6 @@ export async function askAI(userMessage) {
   const store = useHabitsStore()
   const today = new Date().toISOString().split('T')[0]
 
-  const yesterday = new Date()
-  yesterday.setDate(yesterday.getDate() - 1)
-  const yesterdayStr = yesterday.toISOString().split('T')[0]
-
   const completedToday = store.habits.filter((h) => h.completedDates.includes(today))
   const pendingToday = store.habits.filter((h) => !h.completedDates.includes(today))
   const todayTasks = store.todayTasks
@@ -98,6 +94,60 @@ ${
     .replace(/\*(.*?)\*/g, '$1')
     .replace(/---/g, '—')
 }
+
+// Персональное приветствие на главном экране (первый контакт после онбординга).
+// Тёплый наставник: упоминает конкретную привычку и зовёт сделать микро-шаг.
+export async function generateGreeting({ habitName, duration } = {}) {
+  const store = useHabitsStore()
+  const today = new Date().toISOString().split('T')[0]
+
+  const completedToday = store.habits.filter((h) => h.completedDates.includes(today))
+  const allHabits = store.habits.map((h) => h.name).join(', ') || 'нет привычек'
+  const bestStreak = Math.max(0, ...store.habits.map((h) => h.streak))
+
+  const context = `
+Ты — личный наставник пользователя в приложении Oyan AI. Тон: тёплый, спокойный, поддерживающий.
+Пиши по-русски. Без восклицательных знаков. Без эмодзи. Без канцелярита и общих фраз.
+Строго 2-3 коротких предложения.
+
+Задача: поприветствовать пользователя лично и подвести к одному маленькому действию.
+1. Обратись к пользователю по-человечески.
+2. Упомяни КОНКРЕТНУЮ привычку: "${habitName}".
+3. Дай короткий тёплый инсайт, почему даже малый шаг сегодня важен.
+4. Мягко позови начать прямо сейчас (${duration} минут).
+
+Контекст:
+- Привычки пользователя: ${allHabits}
+- Сегодня уже выполнено: ${completedToday.map((h) => h.name).join(', ') || 'пока ничего'}
+- Лучший streak: ${bestStreak} дней
+`
+
+  const response = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': import.meta.env.VITE_ANTHROPIC_API_KEY,
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true',
+    },
+    body: JSON.stringify({
+      model: 'claude-opus-4-5',
+      max_tokens: 300,
+      system: context,
+      messages: [{ role: 'user', content: 'Поприветствуй меня.' }],
+    }),
+  })
+
+  const data = await response.json()
+  const text = data.content?.[0]?.text
+  if (!text) throw new Error('empty greeting')
+  return text
+    .replace(/\*\*(.*?)\*\*/g, '$1')
+    .replace(/\*(.*?)\*/g, '$1')
+    .replace(/---/g, '—')
+    .trim()
+}
+
 export async function generateNotifications() {
   const store = useHabitsStore()
   const today = new Date().toISOString().split('T')[0]

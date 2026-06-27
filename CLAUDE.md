@@ -67,6 +67,3 @@ AI chat history is stored in the Pinia store (`aiMessages`, `aiMessagesDate`) an
 - `src/components/BottomNav.vue` — tab bar shown on all screens except `/auth` and `/onboarding`
 - `src/components/HeatMap.vue`, `ProgressChart.vue` — Chart.js visualizations used in ProgressView
 - App is constrained to 430px max-width, styled for mobile; iOS bounce scroll is suppressed in `main.js`
-
-### Migration script
-`src/migrate.js` migrates old localStorage data to Supabase. `App.vue` exposes a temporary "Мигрировать данные" button — remove it once migration is complete.

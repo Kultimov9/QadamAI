@@ -22,6 +22,9 @@ export const useHabitsStore = defineStore('habits', {
     lastNotifGenDate: '',
     aiMessages: [],
     aiMessagesDate: '',
+    aiGreeting: '',
+    aiGreetingDate: '',
+    aiGreetingDismissedDate: '',
   }),
 
   getters: {
@@ -297,6 +300,13 @@ export const useHabitsStore = defineStore('habits', {
     clearAIMessages() {
       this.aiMessages = []
       this.aiMessagesDate = ''
+    },
+    setAiGreeting(text) {
+      this.aiGreeting = text
+      this.aiGreetingDate = new Date().toISOString().split('T')[0]
+    },
+    dismissAiGreeting() {
+      this.aiGreetingDismissedDate = new Date().toISOString().split('T')[0]
     },
   },
 

@@ -40,10 +40,9 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useHabitsStore } from '../stores/habits'
-import { App } from '@capacitor/app'
 
 const router = useRouter()
 const route = useRoute()

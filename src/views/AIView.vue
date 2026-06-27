@@ -111,7 +111,7 @@ async function sendMessage(text) {
     const reply = await askAI(msg)
     messages.value.push({ id: Date.now() + 1, role: 'assistant', text: reply })
     store.saveAIMessages(messages.value)
-  } catch (e) {
+  } catch {
     messages.value.push({
       id: Date.now() + 1,
       role: 'assistant',

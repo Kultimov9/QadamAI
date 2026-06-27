@@ -45,3 +45,28 @@ export async function setupNotifications() {
   console.log('scheduling notifications:', JSON.stringify(notifications))
   await LocalNotifications.schedule({ notifications })
 }
+
+// Разовое напоминание на ближайшие 20:00 (сегодня, либо завтра если уже позже).
+// id 99 не пересекается с фиксированными (1, 2) и кастомными уведомлениями.
+export async function scheduleEveningReminder(habitName) {
+  const permission = await LocalNotifications.requestPermissions()
+  if (permission.display !== 'granted') return
+
+  const at = new Date()
+  at.setHours(20, 0, 0, 0)
+  if (at.getTime() <= Date.now()) at.setDate(at.getDate() + 1)
+
+  await LocalNotifications.cancel({ notifications: [{ id: 99 }] })
+  await LocalNotifications.schedule({
+    notifications: [
+      {
+        id: 99,
+        title: 'Oyan AI',
+        body: habitName
+          ? `Вечер — хорошее время для «${habitName}». Сделаешь маленький шаг?`
+          : 'Вечер — хорошее время для маленького шага.',
+        schedule: { at, allowWhileIdle: true },
+      },
+    ],
+  })
+}
