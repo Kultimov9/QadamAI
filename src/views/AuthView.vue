@@ -31,6 +31,7 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { supabase } from '../lib/supabase'
 import { useHabitsStore } from '../stores/habits'
+import { logLoginEvent } from '../lib/loginEvents'
 import logoUrl from '@/assets/logo-wordmark.png'
 
 const router = useRouter()
@@ -65,6 +66,9 @@ async function handleAuth() {
       })
       if (signUpError) throw signUpError
     }
+
+    // Логируем ручной вход (для аналитики входов в админке).
+    logLoginEvent()
 
     // Сначала подтягиваем данные из Supabase, и только потом решаем, куда вести.
     // force=true — свежая загрузка под только что вошедшим пользователем.

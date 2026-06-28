@@ -13,11 +13,15 @@ import { setupNotifications } from './composables/useNotifications'
 import { generateNotifications } from './composables/useAI'
 import { useHabitsStore } from './stores/habits'
 import { supabase } from './lib/supabase'
+import { logLoginEvent, setupResumeTracking } from './lib/loginEvents'
 
 const route = useRoute()
 
 onMounted(async () => {
   const store = useHabitsStore()
+
+  // Возврат из фона считается заходом (с антидребезгом). Регистрируем один раз.
+  setupResumeTracking()
 
   document.body.style.position = 'fixed'
   document.body.style.width = '100%'
@@ -28,6 +32,9 @@ onMounted(async () => {
     data: { session },
   } = await supabase.auth.getSession()
   if (session) {
+    // Открытие приложения с активной сессией — считаем как вход (для аналитики).
+    logLoginEvent()
+
     // Тот же общий промис, что ждёт router guard — данные точно на месте,
     // и двойной загрузки не происходит.
     await store.ensureLoaded()
