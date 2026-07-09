@@ -107,47 +107,65 @@ const todayCompleted = computed(() => store.todayCompleted)
 const PLACEHOLDER = 'С чего начнём сегодня? Даже 5 минут — это шаг.'
 const greetingText = ref(PLACEHOLDER)
 const todayStr = () => new Date().toISOString().split('T')[0]
+const isDoneToday = (h) => !!h && h.completedDates.includes(todayStr())
 
-// Привычка, к которой ведём: первая невыполненная, иначе первая в списке.
-// Её же имя/длительность передаём AI — текст и кнопка всегда про одну привычку.
-const targetHabit = computed(() => pendingHabits.value[0] || store.habits[0] || null)
-// Блок скрыт до конца дня, если пользователь нажал «Не сейчас» сегодня.
-const showGreeting = computed(
-  () => store.aiGreetingDismissedDate !== todayStr() && !!targetHabit.value,
+// Привычка из баннера закрепляется при генерации приветствия (aiGreetingHabitId),
+// чтобы текст и кнопка были про одну и ту же привычку, даже после выполнения других.
+// До генерации (или если привычку удалили) — первая невыполненная.
+const pinnedHabit = computed(() =>
+  store.aiGreetingHabitId ? store.habits.find((h) => h.id === store.aiGreetingHabitId) : null,
 )
+const targetHabit = computed(() => pinnedHabit.value || pendingHabits.value[0] || null)
+
+const showGreeting = computed(() => {
+  if (store.aiGreetingDismissedDate === todayStr()) return false
+  if (!targetHabit.value) return false
+  // Привычку из баннера уже выполнили сегодня — не зовём её снова.
+  if (isDoneToday(targetHabit.value)) return false
+  return true
+})
 
 function startTarget() {
   if (targetHabit.value) router.push(`/timer/${targetHabit.value.id}`)
 }
 
 async function remindLater() {
-  store.dismissAiGreeting()
   try {
-    await scheduleEveningReminder(targetHabit.value?.name)
+    const at = await scheduleEveningReminder(targetHabit.value?.name)
+    if (at) {
+      // Подтверждаем, что напоминание поставлено, затем сворачиваем блок.
+      const hh = String(at.getHours()).padStart(2, '0')
+      const mm = String(at.getMinutes()).padStart(2, '0')
+      greetingText.value = `Хорошо, напомню в ${hh}:${mm}.`
+      setTimeout(() => store.dismissAiGreeting(), 1600)
+      return
+    }
   } catch (e) {
     console.log('evening reminder error:', e)
   }
+  store.dismissAiGreeting()
 }
 
 onMounted(async () => {
   const today = todayStr()
   // Блок скрыт на сегодня («Не сейчас») — не генерируем, API не трогаем.
   if (store.aiGreetingDismissedDate === today) return
-  // Уже есть приветствие на сегодня — показываем сохранённое, API не дёргаем.
-  if (store.aiGreetingDate === today && store.aiGreeting) {
+  // Используем сохранённое приветствие, только если оно с закреплённой привычкой.
+  if (store.aiGreetingDate === today && store.aiGreeting && store.aiGreetingHabitId) {
     greetingText.value = store.aiGreeting
     return
   }
-  // Иначе: заглушка уже видна, тихо генерируем один раз и сохраняем.
-  if (!targetHabit.value) return
+  // Иначе: заглушка уже видна, тихо генерируем один раз и сохраняем (с id привычки).
+  const target = pendingHabits.value[0]
+  if (!target) return
   try {
     const text = await generateGreeting({
-      habitName: targetHabit.value.name,
-      duration: targetHabit.value.duration,
+      habitName: target.name,
+      duration: target.duration,
     })
     if (text) {
       greetingText.value = text
-      store.setAiGreeting(text)
+      store.setAiGreeting(text, target.id)
     }
   } catch (e) {
     // Нет интернета / ошибка — оставляем заглушку, ошибку не показываем.

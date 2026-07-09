@@ -25,6 +25,8 @@ export const useHabitsStore = defineStore('habits', {
     aiGreeting: '',
     aiGreetingDate: '',
     aiGreetingDismissedDate: '',
+    aiGreetingHabitId: null,
+    eveningReminderHabit: '',
   }),
 
   getters: {
@@ -130,6 +132,13 @@ export const useHabitsStore = defineStore('habits', {
       if (habit && !habit.completedDates.includes(today)) {
         habit.completedDates.push(today)
         habit.streak += 1
+
+        // Привычка сделана — сегодняшние пуши о ней больше не нужны.
+        // Динамический импорт, чтобы не создавать циклическую зависимость.
+        import('../composables/useNotifications')
+          .then(({ cancelNotificationsForHabit }) => cancelNotificationsForHabit(habit.name))
+          .catch((e) => console.log('cancel notifications error:', e))
+
         const { error } = await supabase
           .from('habits')
           .update({
@@ -301,9 +310,10 @@ export const useHabitsStore = defineStore('habits', {
       this.aiMessages = []
       this.aiMessagesDate = ''
     },
-    setAiGreeting(text) {
+    setAiGreeting(text, habitId = null) {
       this.aiGreeting = text
       this.aiGreetingDate = new Date().toISOString().split('T')[0]
+      this.aiGreetingHabitId = habitId
     },
     dismissAiGreeting() {
       this.aiGreetingDismissedDate = new Date().toISOString().split('T')[0]

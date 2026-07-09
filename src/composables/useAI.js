@@ -80,7 +80,7 @@ ${
       'anthropic-dangerous-direct-browser-access': 'true',
     },
     body: JSON.stringify({
-      model: 'claude-opus-4-5',
+      model: 'claude-haiku-4-5-20251001',
       max_tokens: 1000,
       system: context,
       messages: [{ role: 'user', content: userMessage }],
@@ -131,7 +131,7 @@ export async function generateGreeting({ habitName, duration } = {}) {
       'anthropic-dangerous-direct-browser-access': 'true',
     },
     body: JSON.stringify({
-      model: 'claude-opus-4-5',
+      model: 'claude-haiku-4-5-20251001',
       max_tokens: 300,
       system: context,
       messages: [{ role: 'user', content: 'Поприветствуй меня.' }],
@@ -197,10 +197,11 @@ export async function generateNotifications() {
 - Активные цели: ${goalsInfo}
 ${lastReflection ? `- Последняя рефлексия (${lastReflection.date}): настроение ${lastReflection.mood}, мешало: ${lastReflection.obstacles?.join(', ') || 'ничего'}, заметка: "${lastReflection.note || ''}"` : '- Рефлексий ещё нет'}
 
-Ответь ТОЛЬКО в формате JSON массива, без лишнего текста:
+Ответь ТОЛЬКО в формате JSON массива, без лишнего текста.
+Поле "habit" — ТОЧНОЕ название привычки из списка, о которой уведомление, или null, если оно не про конкретную привычку:
 [
-  { "hour": 12, "minute": 0, "text": "текст уведомления" },
-  { "hour": 15, "minute": 30, "text": "текст уведомления" }
+  { "hour": 12, "minute": 0, "text": "текст уведомления", "habit": "название привычки или null" },
+  { "hour": 15, "minute": 30, "text": "текст уведомления", "habit": null }
 ]
 `
 
@@ -213,7 +214,7 @@ ${lastReflection ? `- Последняя рефлексия (${lastReflection.da
       'anthropic-dangerous-direct-browser-access': 'true',
     },
     body: JSON.stringify({
-      model: 'claude-opus-4-5',
+      model: 'claude-haiku-4-5-20251001',
       max_tokens: 500,
       system: context,
       messages: [{ role: 'user', content: 'Придумай уведомления для меня на сегодня' }],
@@ -230,5 +231,6 @@ ${lastReflection ? `- Последняя рефлексия (${lastReflection.da
     hour: n.hour,
     minute: n.minute || 0,
     text: n.text,
+    habit: n.habit || null,
   }))
 }
