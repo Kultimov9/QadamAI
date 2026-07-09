@@ -560,6 +560,10 @@ function formatDate(dateStr) {
   font-size: 14px;
   outline: none;
   background: #0a0a0a;
+  color: #ffffff;
+}
+.step-input::placeholder {
+  color: #5a5a55;
 }
 .step-input:focus {
   border-color: #f5f0e8;
