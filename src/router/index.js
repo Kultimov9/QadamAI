@@ -51,6 +51,15 @@ router.beforeEach(async (to) => {
     if (needsOnboarding && to.path !== '/onboarding') {
       return '/onboarding'
     }
+
+    // Идёт таймер привычки — вкладка «Привычки» возвращает к текущему таймеру,
+    // а не к списку. Только для сегодняшнего запущенного (не на паузе) таймера.
+    if (to.path === '/habits') {
+      const t = store.activeTimer
+      if (t?.running && new Date(t.startedAt).toDateString() === new Date().toDateString()) {
+        return `/timer/${t.habitId}`
+      }
+    }
   }
 })
 

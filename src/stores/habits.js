@@ -27,6 +27,9 @@ export const useHabitsStore = defineStore('habits', {
     aiGreetingDismissedDate: '',
     aiGreetingHabitId: null,
     eveningReminderHabit: '',
+    // Активный таймер привычки: { habitId, startedAt, elapsedBefore, running }.
+    // Живёт в сторе, чтобы случайный переход на другую вкладку не сбрасывал время.
+    activeTimer: null,
   }),
 
   getters: {

@@ -40,7 +40,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useHabitsStore } from '../stores/habits'
 
@@ -55,9 +55,44 @@ const secondsLeft = ref(totalSeconds.value)
 const started = ref(false)
 const running = ref(false)
 let interval = null
-// let appStateListener = null
 let startTime = null
 let elapsed = 0
+
+// Восстановление таймера после случайного ухода на другую вкладку: состояние
+// лежит в сторе и привязано к метке старта, поэтому время «идёт» даже пока
+// экран был закрыт. Восстанавливаем только сегодняшний таймер этой привычки.
+onMounted(() => {
+  const saved = store.activeTimer
+  if (!saved || saved.habitId !== route.params.id) return
+  if (new Date(saved.startedAt).toDateString() !== new Date().toDateString()) {
+    store.activeTimer = null
+    return
+  }
+
+  started.value = true
+  elapsed = saved.elapsedBefore
+  if (saved.running) {
+    startTime = saved.startedAt
+    const delta = Math.floor((Date.now() - startTime) / 1000)
+    secondsLeft.value = Math.max(0, totalSeconds.value - elapsed - delta)
+    if (secondsLeft.value <= 0) {
+      complete()
+    } else {
+      running.value = true
+      tick()
+      enableWakeLock()
+    }
+  } else {
+    secondsLeft.value = Math.max(0, totalSeconds.value - elapsed)
+  }
+})
+
+// Уход со страницы НЕ сбрасывает store.activeTimer — только глушим интервал
+// этого экземпляра, чтобы не было двойных тиков при возврате.
+onUnmounted(() => {
+  clearInterval(interval)
+  disableWakeLock()
+})
 
 const formattedTime = computed(() => {
   const m = Math.floor(secondsLeft.value / 60)
@@ -74,6 +109,12 @@ function start() {
   started.value = true
   running.value = true
   startTime = Date.now()
+  store.activeTimer = {
+    habitId: route.params.id,
+    startedAt: startTime,
+    elapsedBefore: 0,
+    running: true,
+  }
   tick()
   enableWakeLock()
 }
@@ -96,15 +137,22 @@ function pause() {
   clearInterval(interval)
   elapsed += Math.floor((Date.now() - startTime) / 1000)
   running.value = false
+  if (store.activeTimer) {
+    store.activeTimer = { ...store.activeTimer, elapsedBefore: elapsed, running: false }
+  }
 }
 
 function resume() {
   startTime = Date.now()
   running.value = true
+  if (store.activeTimer) {
+    store.activeTimer = { ...store.activeTimer, startedAt: startTime, running: true }
+  }
   tick()
 }
 
 function complete() {
+  store.activeTimer = null
   store.completeHabit(habit.value.id)
   router.replace('/')
 }
@@ -112,12 +160,14 @@ function complete() {
 function postpone() {
   clearInterval(interval)
   disableWakeLock()
+  store.activeTimer = null
   router.replace('/')
 }
 
 function skip() {
   clearInterval(interval)
   disableWakeLock()
+  store.activeTimer = null
   router.replace('/')
 }
 
@@ -141,20 +191,6 @@ function disableWakeLock() {
   }
 }
 
-// пауза когда уходим в другое приложение
-// onMounted(async () => {
-//   appStateListener = await App.addListener('appStateChange', ({ isActive }) => {
-//     if (!isActive && running.value) {
-//       pause()
-//     }
-//   })
-// })
-
-// onUnmounted(() => {
-//   clearInterval(interval)
-//   disableWakeLock()
-//   if (appStateListener) appStateListener.remove()
-// })
 </script>
 
 <style scoped>
