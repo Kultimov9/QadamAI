@@ -50,7 +50,7 @@ export async function setupNotifications() {
       .filter((n) => !isAboutDoneHabit(n))
       .map((n) => ({
         id: n.id,
-        title: 'Oyan AI ✨',
+        title: 'Oyan ✨',
         body: n.text,
         schedule: {
           on: { hour: n.hour, minute: n.minute || 0 },
@@ -112,7 +112,7 @@ export async function scheduleEveningReminder(habitName) {
     notifications: [
       {
         id: 99,
-        title: 'Oyan AI',
+        title: 'Oyan',
         body: habitName
           ? `Самое время для «${habitName}». Сделаешь маленький шаг?`
           : 'Самое время для маленького шага.',

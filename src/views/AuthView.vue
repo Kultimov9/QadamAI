@@ -1,6 +1,6 @@
 <template>
   <div class="auth-view">
-    <img :src="logoUrl" class="logo" alt="Oyan AI" />
+    <img :src="logoUrl" class="logo" alt="Oyan" />
     <div class="auth-content">
       <p class="subtitle">{{ isLogin ? 'Войди в аккаунт' : 'Создай аккаунт' }}</p>
 
@@ -14,6 +14,7 @@
       />
 
       <p v-if="error" class="error">{{ error }}</p>
+      <p v-if="notice" class="notice">{{ notice }}</p>
 
       <button class="btn" @click="handleAuth" :disabled="loading">
         {{ loading ? 'Загрузка...' : isLogin ? 'Войти' : 'Зарегистрироваться' }}
@@ -42,9 +43,11 @@ const password = ref('')
 const isLogin = ref(true)
 const loading = ref(false)
 const error = ref('')
+const notice = ref('')
 
 async function handleAuth() {
   error.value = ''
+  notice.value = ''
   if (!email.value || !password.value) {
     error.value = 'Заполни email и пароль'
     return
@@ -60,11 +63,28 @@ async function handleAuth() {
       })
       if (signInError) throw signInError
     } else {
-      const { error: signUpError } = await supabase.auth.signUp({
+      const { data, error: signUpError } = await supabase.auth.signUp({
         email: email.value,
         password: password.value,
       })
       if (signUpError) throw signUpError
+
+      // Email уже зарегистрирован: Supabase скрывает это пустым списком identities.
+      if (data.user && Array.isArray(data.user.identities) && data.user.identities.length === 0) {
+        error.value = 'Этот email уже зарегистрирован. Попробуй войти.'
+        loading.value = false
+        return
+      }
+
+      // Нет сессии → включено подтверждение почты. Показываем сообщение и ждём,
+      // пока пользователь подтвердит email по ссылке из письма.
+      if (!data.session) {
+        notice.value = `Мы отправили письмо на ${email.value}. Подтверди почту по ссылке, затем войди.`
+        password.value = ''
+        isLogin.value = true
+        loading.value = false
+        return
+      }
     }
 
     // Логируем ручной вход (для аналитики входов в админке).
@@ -107,7 +127,7 @@ async function handleAuth() {
 }
 .logo {
   display: block;
-  width: 220px;
+  width: 150px;
   height: auto;
   margin: 5vh auto 0;
 }
@@ -135,6 +155,17 @@ async function handleAuth() {
 .error {
   color: #f5f0e8;
   font-size: 13px;
+  text-align: center;
+  margin: 0;
+}
+.notice {
+  color: #f5f0e8;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 12px;
+  padding: 12px 14px;
+  font-size: 14px;
+  line-height: 1.5;
   text-align: center;
   margin: 0;
 }

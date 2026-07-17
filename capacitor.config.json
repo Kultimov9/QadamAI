@@ -1,6 +1,6 @@
 {
   "appId": "com.nurlankultimov.oyan",
-  "appName": "Oyan AI",
+  "appName": "Oyan",
   "webDir": "dist",
   "plugins": {
     "SplashScreen": {

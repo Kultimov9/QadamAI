@@ -63,8 +63,27 @@
           <p class="section-label">Добавить привычку</p>
           <div class="add-form">
             <div class="form-row">
-              <input v-model="newEmoji" class="emoji-input" placeholder="😀" maxlength="2" />
+              <button
+                type="button"
+                class="emoji-btn"
+                :class="{ open: showEmojiPicker }"
+                @click="showEmojiPicker = !showEmojiPicker"
+              >
+                {{ newEmoji }}
+              </button>
               <input v-model="newName" class="name-input" placeholder="Название" />
+            </div>
+            <div v-if="showEmojiPicker" class="emoji-picker">
+              <button
+                v-for="e in EMOJIS"
+                :key="e"
+                type="button"
+                class="emoji-option"
+                :class="{ sel: e === newEmoji }"
+                @click="pickEmoji(e)"
+              >
+                {{ e }}
+              </button>
             </div>
             <div class="form-row">
               <label class="duration-label">Минут: {{ newDuration }}</label>
@@ -196,6 +215,20 @@ const newEmoji = ref('⭐')
 const newName = ref('')
 const newDuration = ref(5)
 const habitToDelete = ref(null)
+const showEmojiPicker = ref(false)
+
+// Набор эмодзи для привычек (спорт, здоровье, учёба, быт и т.п.)
+const EMOJIS = [
+  '⭐', '💪', '🏃', '🧘', '🚶', '🏋️', '🚴', '⚽',
+  '📚', '✍️', '🧠', '🎯', '💻', '🎨', '🎸', '🎧',
+  '💧', '🥗', '🍎', '☕', '💊', '😴', '🦷', '🚭',
+  '🌅', '🌙', '🧹', '💰', '📵', '🙏', '🔥', '❤️',
+]
+
+function pickEmoji(e) {
+  newEmoji.value = e
+  showEmojiPicker.value = false
+}
 
 function addHabit() {
   if (!newName.value.trim()) return
@@ -203,6 +236,7 @@ function addHabit() {
   newName.value = ''
   newEmoji.value = '⭐'
   newDuration.value = 5
+  showEmojiPicker.value = false
 }
 
 function confirmDelete(habit) {
@@ -374,16 +408,50 @@ function habitProgress(count) {
   align-items: center;
   gap: 10px;
 }
-.emoji-input {
+.emoji-btn {
   width: 48px;
+  height: 44px;
   font-size: 24px;
+  line-height: 1;
   text-align: center;
   border: 1px solid #2a2a2a;
   border-radius: 10px;
-  padding: 8px;
+  padding: 0;
   outline: none;
   background: #1a1a1a;
   color: #ffffff;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.emoji-btn.open {
+  border-color: #f5f0e8;
+}
+.emoji-picker {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 4px;
+  background: #1a1a1a;
+  border: 1px solid #2a2a2a;
+  border-radius: 12px;
+  padding: 8px;
+}
+.emoji-option {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  padding: 0;
+}
+.emoji-option:active {
+  transform: scale(0.9);
+}
+.emoji-option.sel {
+  background: #2a2a2a;
 }
 .name-input {
   flex: 1;
