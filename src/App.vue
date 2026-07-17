@@ -14,6 +14,7 @@ import { generateNotifications } from './composables/useAI'
 import { useHabitsStore } from './stores/habits'
 import { supabase } from './lib/supabase'
 import { logLoginEvent, setupResumeTracking } from './lib/loginEvents'
+import { logEvent } from './composables/useAnalytics'
 
 const route = useRoute()
 
@@ -34,6 +35,7 @@ onMounted(async () => {
   if (session) {
     // Открытие приложения с активной сессией — считаем как вход (для аналитики).
     logLoginEvent()
+    logEvent('app_open')
 
     // Тот же общий промис, что ждёт router guard — данные точно на месте,
     // и двойной загрузки не происходит.

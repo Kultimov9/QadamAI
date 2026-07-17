@@ -64,6 +64,7 @@ import { ref, nextTick, onMounted } from 'vue'
 import { Send } from 'lucide-vue-next'
 import { askAI } from '../composables/useAI'
 import { useHabitsStore } from '../stores/habits'
+import { logEvent } from '../composables/useAnalytics'
 
 const store = useHabitsStore()
 const messages = ref([])
@@ -101,6 +102,7 @@ async function sendMessage(text) {
   if (!msg || loading.value) return
 
   messages.value.push({ id: Date.now(), role: 'user', text: msg })
+  logEvent('ai_message_sent', { length: msg.length })
   input.value = ''
   loading.value = true
 

@@ -43,6 +43,7 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useHabitsStore } from '../stores/habits'
+import { logEvent } from '../composables/useAnalytics'
 
 const router = useRouter()
 const route = useRoute()
@@ -115,6 +116,7 @@ function start() {
     elapsedBefore: 0,
     running: true,
   }
+  logEvent('timer_started', { habitId: route.params.id, name: habit.value?.name })
   tick()
   enableWakeLock()
 }
@@ -153,6 +155,7 @@ function resume() {
 
 function complete() {
   store.activeTimer = null
+  logEvent('timer_completed', { habitId: route.params.id, name: habit.value?.name })
   store.completeHabit(habit.value.id)
   router.replace('/')
 }
@@ -161,6 +164,7 @@ function postpone() {
   clearInterval(interval)
   disableWakeLock()
   store.activeTimer = null
+  logEvent('timer_abandoned', { habitId: route.params.id, name: habit.value?.name, reason: 'postpone' })
   router.replace('/')
 }
 
@@ -168,6 +172,7 @@ function skip() {
   clearInterval(interval)
   disableWakeLock()
   store.activeTimer = null
+  logEvent('timer_abandoned', { habitId: route.params.id, name: habit.value?.name, reason: 'skip' })
   router.replace('/')
 }
 

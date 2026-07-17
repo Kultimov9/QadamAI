@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { supabase } from '../lib/supabase'
+import { logEvent } from '../composables/useAnalytics'
 
 // Кэш промиса загрузки данных. Живёт вне state, поэтому не персистится и не
 // сериализуется. Гарантирует, что fetchAll() выполнится один раз, а параллельные
@@ -117,6 +118,7 @@ export const useHabitsStore = defineStore('habits', {
     async addHabit(name, emoji, duration) {
       const id = crypto.randomUUID()
       this.habits.push({ id, name, emoji, duration, streak: 0, completedDates: [] })
+      logEvent('habit_created', { id, name })
       const { error } = await supabase.from('habits').insert({
         id,
         user_id: this.userId,
@@ -135,6 +137,7 @@ export const useHabitsStore = defineStore('habits', {
       if (habit && !habit.completedDates.includes(today)) {
         habit.completedDates.push(today)
         habit.streak += 1
+        logEvent('habit_completed', { id, name: habit.name })
 
         // Привычка сделана — сегодняшние пуши о ней больше не нужны.
         // Динамический импорт, чтобы не создавать циклическую зависимость.
@@ -154,7 +157,9 @@ export const useHabitsStore = defineStore('habits', {
     },
 
     async removeHabit(id) {
+      const removed = this.habits.find((h) => h.id === id)
       this.habits = this.habits.filter((h) => h.id !== id)
+      logEvent('habit_deleted', { id, name: removed?.name })
       const { error } = await supabase.from('habits').delete().eq('id', id)
       if (error) console.error('removeHabit error:', error)
     },
@@ -164,6 +169,7 @@ export const useHabitsStore = defineStore('habits', {
       const id = crypto.randomUUID()
       const date = new Date().toISOString().split('T')[0]
       this.tasks.push({ id, text, done: false, date })
+      logEvent('task_created', { id })
       const { error } = await supabase.from('tasks').insert({
         id,
         user_id: this.userId,
@@ -178,6 +184,7 @@ export const useHabitsStore = defineStore('habits', {
       const task = this.tasks.find((t) => t.id === id)
       if (task) {
         task.done = !task.done
+        if (task.done) logEvent('task_done', { id })
         const { error } = await supabase.from('tasks').update({ done: task.done }).eq('id', id)
         if (error) console.error('toggleTask error:', error)
       }
@@ -258,6 +265,7 @@ export const useHabitsStore = defineStore('habits', {
       const existingIndex = this.reflections.findIndex((r) => r.date === data.date)
       if (existingIndex !== -1) this.reflections[existingIndex] = data
       else this.reflections.push(data)
+      logEvent('reflection_saved', { date: data.date, mood: data.mood })
 
       const { data: existing } = await supabase
         .from('reflections')
