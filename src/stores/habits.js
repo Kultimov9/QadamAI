@@ -31,6 +31,9 @@ export const useHabitsStore = defineStore('habits', {
     // Активный таймер привычки: { habitId, startedAt, elapsedBefore, running }.
     // Живёт в сторе, чтобы случайный переход на другую вкладку не сбрасывал время.
     activeTimer: null,
+    // Пропущенные сегодня привычки: { [habitId]: 'YYYY-MM-DD' }. Такую привычку
+    // «Начать прямо сейчас» больше не предлагает сегодня.
+    skippedHabits: {},
   }),
 
   getters: {
@@ -41,6 +44,14 @@ export const useHabitsStore = defineStore('habits', {
     todayPending: (state) => {
       const today = new Date().toISOString().split('T')[0]
       return state.habits.filter((h) => !h.completedDates.includes(today))
+    },
+    // Привычки, которые «Начать прямо сейчас» может открыть: не выполнены и не
+    // пропущены сегодня. Первая из них — следующая на очереди.
+    todayStartable: (state) => {
+      const today = new Date().toISOString().split('T')[0]
+      return state.habits.filter(
+        (h) => !h.completedDates.includes(today) && state.skippedHabits[h.id] !== today,
+      )
     },
     todayTasks: (state) => {
       const today = new Date().toISOString().split('T')[0]
@@ -154,6 +165,12 @@ export const useHabitsStore = defineStore('habits', {
           .eq('id', id)
         if (error) console.error('completeHabit error:', error)
       }
+    },
+
+    // Пометить привычку пропущенной на сегодня (кнопка «Пропустить сегодня»).
+    skipHabitToday(id) {
+      const today = new Date().toISOString().split('T')[0]
+      this.skippedHabits = { ...this.skippedHabits, [id]: today }
     },
 
     async removeHabit(id) {

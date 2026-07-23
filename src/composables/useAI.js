@@ -1,4 +1,162 @@
 import { useHabitsStore } from '../stores/habits'
+import { supabase } from '../lib/supabase'
+
+// ── Помощники для истории поведения ─────────────────────────────────────────
+
+// Массив последних N дат в формате YYYY-MM-DD (включая сегодня), от старых к новым.
+function lastNDates(n) {
+  const out = []
+  const d = new Date()
+  for (let i = n - 1; i >= 0; i--) {
+    const x = new Date(d)
+    x.setDate(d.getDate() - i)
+    out.push(x.toISOString().split('T')[0])
+  }
+  return out
+}
+
+// Лучший streak: самая длинная серия подряд идущих дат в completedDates.
+function bestStreakOf(dates) {
+  if (!dates.length) return 0
+  const set = new Set(dates)
+  let best = 0
+  for (const ds of dates) {
+    const prev = new Date(ds)
+    prev.setDate(prev.getDate() - 1)
+    if (set.has(prev.toISOString().split('T')[0])) continue // не начало серии
+    // ds — начало серии, считаем вперёд
+    let len = 1
+    let cur = new Date(ds)
+    for (;;) {
+      cur.setDate(cur.getDate() + 1)
+      if (set.has(cur.toISOString().split('T')[0])) len++
+      else break
+    }
+    if (len > best) best = len
+  }
+  return best
+}
+
+// Текущая серия пропусков: сколько дней подряд НЕ выполнено, начиная со вчера
+// (сегодня ещё в процессе, поэтому его не считаем пропуском).
+function currentMissStreak(completedSet) {
+  let misses = 0
+  const d = new Date()
+  d.setDate(d.getDate() - 1)
+  for (;;) {
+    if (completedSet.has(d.toISOString().split('T')[0])) break
+    misses++
+    d.setDate(d.getDate() - 1)
+    if (misses > 60) break // предохранитель
+  }
+  return misses
+}
+
+const WEEKDAYS = ['воскресенье', 'понедельник', 'вторник', 'среда', 'четверг', 'пятница', 'суббота']
+
+// Компактная сводка истории привычек + паттерны (14 дней).
+function buildHabitsHistory(store) {
+  if (!store.habits.length) return ''
+  const window = lastNDates(14)
+  const missesByWeekday = new Array(7).fill(0)
+
+  const lines = store.habits.map((h) => {
+    const set = new Set(h.completedDates)
+    const doneInWindow = window.filter((d) => set.has(d)).length
+    for (const d of window) {
+      if (!set.has(d)) missesByWeekday[new Date(d).getDay()]++
+    }
+    return {
+      name: h.name,
+      doneInWindow,
+      miss: currentMissStreak(set),
+      best: bestStreakOf(h.completedDates),
+    }
+  })
+
+  const worst = [...lines].sort((a, b) => a.doneInWindow - b.doneInWindow)[0]
+  const worstWeekday = missesByWeekday.indexOf(Math.max(...missesByWeekday))
+
+  const habitLines = lines
+    .map(
+      (l) =>
+        `- ${l.name}: ${l.doneInWindow}/14 дней, пропусков подряд сейчас: ${l.miss}, лучший streak: ${l.best}`,
+    )
+    .join('\n')
+
+  return `ИСТОРИЯ ПРИВЫЧЕК (последние 14 дней):
+${habitLines}
+
+ПАТТЕРНЫ (посчитано автоматически):
+- Больше всего пропусков приходится на: ${WEEKDAYS[worstWeekday]}
+- Хуже всего даётся: ${worst.name} (${worst.doneInWindow} из 14 дней)`
+}
+
+// Последние 5 рефлексий (по дате, свежие сверху).
+function buildRecentReflections(store) {
+  const refs = [...store.reflections].sort((a, b) => (a.date < b.date ? 1 : -1)).slice(0, 5)
+  if (!refs.length) return 'ПОСЛЕДНИЕ РЕФЛЕКСИИ: пока нет'
+  const lines = refs
+    .map(
+      (r) =>
+        `- ${r.date}: настроение — ${r.mood || 'не указано'}; мешало: ${r.obstacles?.join(', ') || 'ничего'}; заметка: ${r.note ? `"${r.note}"` : 'нет'}`,
+    )
+    .join('\n')
+  return `ПОСЛЕДНИЕ РЕФЛЕКСИИ (до 5):\n${lines}`
+}
+
+// Сводка активности из таблицы events за 7 дней. Устойчиво: при ошибке — ''.
+async function buildActivitySummary(store) {
+  try {
+    const userId = store.userId
+    if (!userId) return ''
+    const since = new Date(Date.now() - 7 * 86400000).toISOString()
+    const { data, error } = await supabase
+      .from('events')
+      .select('type, payload, created_at')
+      .eq('user_id', userId)
+      .gte('created_at', since)
+    if (error || !data) return ''
+
+    const buckets = { утром: 0, днём: 0, вечером: 0, ночью: 0 }
+    let opens = 0
+    let started = 0
+    let completed = 0
+    let abandoned = 0
+    const abandonedByHabit = {}
+
+    for (const e of data) {
+      if (e.type === 'app_open') {
+        opens++
+        const h = new Date(e.created_at).getHours()
+        if (h >= 5 && h < 12) buckets.утром++
+        else if (h >= 12 && h < 17) buckets.днём++
+        else if (h >= 17 && h < 22) buckets.вечером++
+        else buckets.ночью++
+      } else if (e.type === 'timer_started') started++
+      else if (e.type === 'timer_completed') completed++
+      else if (e.type === 'timer_abandoned') {
+        abandoned++
+        const name = e.payload?.name
+        if (name) abandonedByHabit[name] = (abandonedByHabit[name] || 0) + 1
+      }
+    }
+
+    if (!data.length) return ''
+
+    const topBucket = Object.entries(buckets).sort((a, b) => b[1] - a[1])[0]
+    const topAbandoned = Object.entries(abandonedByHabit).sort((a, b) => b[1] - a[1])[0]
+
+    let s = `АКТИВНОСТЬ (последние 7 дней):
+- Открывал приложение ${opens} раз${opens && topBucket[1] ? `, чаще всего ${topBucket[0]}` : ''}
+- Таймеры: запущено ${started}, доведено до конца ${completed}, брошено ${abandoned}`
+    if (topAbandoned) s += `\n- Чаще всего бросал таймер на: ${topAbandoned[0]} (${topAbandoned[1]} раза)`
+    return s
+  } catch (e) {
+    if (import.meta.env.DEV) console.log('activity summary error:', e)
+    return ''
+  }
+}
 
 export async function askAI(userMessage) {
   const store = useHabitsStore()
@@ -9,7 +167,6 @@ export async function askAI(userMessage) {
   const todayTasks = store.todayTasks
   const undoneTasks = todayTasks.filter((t) => !t.done)
   const doneTasks = todayTasks.filter((t) => t.done)
-  const lastReflection = store.reflections[store.reflections.length - 1]
   const bestStreak = Math.max(0, ...store.habits.map((h) => h.streak))
 
   // цели
@@ -41,34 +198,44 @@ export async function askAI(userMessage) {
       })
       .join('\n') || 'нет активных целей'
 
+  // История поведения (агрегированная в компактный текст).
+  const habitsHistory = buildHabitsHistory(store)
+  const recentReflections = buildRecentReflections(store)
+  const activitySummary = await buildActivitySummary(store)
+
   const context = `
-Ты личный помощник и коуч пользователя в приложении Oyan.
-Приложение помогает людям начать действовать и менять жизнь маленькими шагами.
-Отвечай коротко, по делу, по-русски. Будь дружелюбным и мотивирующим. Обращайся на "ты".
+Ты — друг и наставник пользователя в приложении Oyan, а НЕ надзиратель.
+Приложение помогает менять жизнь маленькими шагами.
+
+Как ты общаешься:
+- Никогда не обвиняешь и не стыдишь за пропуски.
+- Про пропуски спрашиваешь с любопытством ("что помешало?"), а не с упрёком.
+- Если человек несколько раз подряд срывается — предлагаешь УМЕНЬШИТЬ цель или нагрузку, а не давить сильнее.
+- Замечаешь и отмечаешь хорошее, а не только провалы.
+- Отвечаешь коротко, по-русски, на "ты", без восклицательных знаков и пафоса.
+
+Тебе доступна история поведения — используй её, чтобы говорить по делу, но мягко.
 
 Данные пользователя на сегодня (${today}):
 
-ПРИВЫЧКИ:
+ПРИВЫЧКИ СЕГОДНЯ:
 - Всего привычек: ${store.habits.length}
 - Выполнено сегодня: ${completedToday.map((h) => h.name).join(', ') || 'пока ничего'}
-- Осталось сегодня: ${pendingToday.map((h) => h.name).join(', ') || 'все выполнены!'}
+- Осталось сегодня: ${pendingToday.map((h) => h.name).join(', ') || 'все выполнены'}
 - Лучший streak: ${bestStreak} дней
+
+${habitsHistory}
 
 ЗАДАЧИ НА СЕГОДНЯ:
 - Выполнено: ${doneTasks.map((t) => t.text).join(', ') || 'пока ничего'}
-- Осталось: ${undoneTasks.map((t) => t.text).join(', ') || 'все выполнены!'}
+- Осталось: ${undoneTasks.map((t) => t.text).join(', ') || 'все выполнены'}
 
 АКТИВНЫЕ ЦЕЛИ:
 ${goalsInfo}
 
-${
-  lastReflection
-    ? `ПОСЛЕДНЯЯ РЕФЛЕКСИЯ (${lastReflection.date}):
-- Настроение: ${lastReflection.mood}
-- Что мешало: ${lastReflection.obstacles?.join(', ') || 'ничего'}
-- Заметка: ${lastReflection.note || 'нет'}`
-    : 'Рефлексий ещё нет'
-}
+${recentReflections}
+
+${activitySummary}
 `
 
   const response = await fetch('https://api.anthropic.com/v1/messages', {

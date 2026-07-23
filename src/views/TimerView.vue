@@ -172,6 +172,7 @@ function skip() {
   clearInterval(interval)
   disableWakeLock()
   store.activeTimer = null
+  store.skipHabitToday(route.params.id)
   logEvent('timer_abandoned', { habitId: route.params.id, name: habit.value?.name, reason: 'skip' })
   router.replace('/')
 }

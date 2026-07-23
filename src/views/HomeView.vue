@@ -29,7 +29,7 @@
       </h1>
     </div>
 
-    <button v-if="pendingHabits.length > 0" class="start-btn" @click="startFirst">
+    <button v-if="startableHabits.length > 0" class="start-btn" @click="startFirst">
       Начать прямо сейчас
     </button>
 
@@ -100,6 +100,7 @@ const router = useRouter()
 const store = useHabitsStore()
 
 const pendingHabits = computed(() => store.todayPending)
+const startableHabits = computed(() => store.todayStartable)
 const completedHabits = computed(() => store.todayCompleted)
 const todayCompleted = computed(() => store.todayCompleted)
 
@@ -187,8 +188,9 @@ function declinate(n) {
 }
 
 function startFirst() {
-  const first = pendingHabits.value[0]
-  if (first) router.push(`/timer/${first.id}`)
+  // Открываем следующую привычку в очереди: не выполненную и не пропущенную сегодня.
+  const next = startableHabits.value[0]
+  if (next) router.push(`/timer/${next.id}`)
 }
 const lastWeekStats = computed(() => {
   const d = new Date()
