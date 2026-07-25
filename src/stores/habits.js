@@ -103,6 +103,17 @@ export const useHabitsStore = defineStore('habits', {
         note: r.note,
       }))
       this.onboarded = profileRes.data?.onboarded || false
+
+      // Сохраняем почту в profiles для идентификации юзеров в админке.
+      // Fire-and-forget, только если ещё не записана или изменилась.
+      if (user.email && profileRes.data?.email !== user.email) {
+        supabase
+          .from('profiles')
+          .upsert({ id: user.id, email: user.email })
+          .then(({ error }) => {
+            if (error) console.log('profile email upsert error:', error)
+          })
+      }
     },
 
     // Загружает данные из Supabase один раз за сессию. Используется роутером и

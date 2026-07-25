@@ -2,10 +2,13 @@
   <div class="auth-view">
     <img :src="logoUrl" class="logo" alt="Oyan" />
     <div class="auth-content">
-      <p class="subtitle">{{ isLogin ? 'Войди в аккаунт' : 'Создай аккаунт' }}</p>
+      <p class="subtitle">
+        {{ showReset ? 'Восстановление пароля' : isLogin ? 'Войди в аккаунт' : 'Создай аккаунт' }}
+      </p>
 
       <input v-model="email" type="email" class="input" placeholder="Email" autocomplete="email" />
       <input
+        v-if="!showReset"
         v-model="password"
         type="password"
         class="input"
@@ -13,14 +16,26 @@
         autocomplete="current-password"
       />
 
+      <button
+        v-if="isLogin && !showReset"
+        class="forgot-btn"
+        @click="openReset"
+      >
+        Забыл пароль?
+      </button>
+
       <p v-if="error" class="error">{{ error }}</p>
       <p v-if="notice" class="notice">{{ notice }}</p>
 
-      <button class="btn" @click="handleAuth" :disabled="loading">
+      <button v-if="showReset" class="btn" @click="sendReset" :disabled="loading">
+        {{ loading ? 'Отправка...' : 'Отправить ссылку' }}
+      </button>
+      <button v-else class="btn" @click="handleAuth" :disabled="loading">
         {{ loading ? 'Загрузка...' : isLogin ? 'Войти' : 'Зарегистрироваться' }}
       </button>
 
-      <button class="switch-btn" @click="isLogin = !isLogin">
+      <button v-if="showReset" class="switch-btn" @click="closeReset">Назад ко входу</button>
+      <button v-else class="switch-btn" @click="isLogin = !isLogin">
         {{ isLogin ? 'Нет аккаунта? Создать' : 'Уже есть аккаунт? Войти' }}
       </button>
     </div>
@@ -44,6 +59,40 @@ const isLogin = ref(true)
 const loading = ref(false)
 const error = ref('')
 const notice = ref('')
+const showReset = ref(false)
+
+function openReset() {
+  showReset.value = true
+  error.value = ''
+  notice.value = ''
+}
+
+function closeReset() {
+  showReset.value = false
+  error.value = ''
+  notice.value = ''
+}
+
+// Отправка ссылки для сброса пароля. Ссылка ведёт на страницу лендинга.
+async function sendReset() {
+  error.value = ''
+  notice.value = ''
+  if (!email.value) {
+    error.value = 'Введи email'
+    return
+  }
+  loading.value = true
+  try {
+    const { error: resetError } = await supabase.auth.resetPasswordForEmail(email.value, {
+      redirectTo: 'https://oyan-app.netlify.app/reset-password',
+    })
+    if (resetError) throw resetError
+    notice.value = `Мы отправили ссылку для сброса пароля на ${email.value}. Проверь почту.`
+  } catch (e) {
+    error.value = e.message || 'Что-то пошло не так'
+  }
+  loading.value = false
+}
 
 async function handleAuth() {
   error.value = ''
@@ -151,6 +200,16 @@ async function handleAuth() {
 }
 .input:focus {
   border-color: rgba(255, 255, 255, 0.5);
+}
+.forgot-btn {
+  align-self: flex-end;
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 13px;
+  cursor: pointer;
+  padding: 2px 0;
+  margin-top: -4px;
 }
 .error {
   color: #f5f0e8;

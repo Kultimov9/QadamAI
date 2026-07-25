@@ -9,10 +9,16 @@
         <p class="ai-greet-text" :key="greetingText">{{ greetingText }}</p>
       </Transition>
       <div class="ai-greet-actions">
-        <button class="ai-greet-primary" @click="startTarget">
-          Начать {{ targetHabit.duration }} минут →
+        <button v-if="noHabits" class="ai-greet-primary" @click="router.push('/habits')">
+          Добавить первую привычку
         </button>
-        <button class="ai-greet-secondary" @click="remindLater">
+        <button v-else class="ai-greet-primary" @click="startTarget">
+          Начать {{ targetHabit?.duration }} минут →
+        </button>
+        <button v-if="noHabits" class="ai-greet-secondary" @click="noHabitsHidden = true">
+          Не сейчас
+        </button>
+        <button v-else class="ai-greet-secondary" @click="remindLater">
           Не сейчас — напомни вечером
         </button>
       </div>
@@ -25,7 +31,8 @@
           Сегодня {{ pendingHabits.length }} {{ declinate(pendingHabits.length) }}.<br />Начни с
           малого.
         </span>
-        <span v-else> Всё сделано! 🎉<br />Ты молодец. </span>
+        <span v-else-if="!noHabits"> Всё сделано! 🎉<br />Ты молодец. </span>
+        <span v-else> Добро пожаловать.<br />Твой путь начинается. </span>
       </h1>
     </div>
 
@@ -51,7 +58,11 @@
     </div>
 
     <button class="secondary-btn" @click="router.push('/habits')">Все привычки</button>
-    <div class="challenge-card" style="background: #1a1a1a; border: 1px solid #2a2a2a">
+    <div
+      v-if="!noHabits"
+      class="challenge-card"
+      style="background: #1a1a1a; border: 1px solid #2a2a2a"
+    >
       <p class="challenge-label">📅 Сравнение со вчера</p>
       <p class="challenge-text" style="color: #ffffff">{{ yesterdayMessage }}</p>
       <div class="challenge-bar-wrap" style="background: #2a2a2a">
@@ -94,6 +105,7 @@ import { useHabitsStore } from '../stores/habits'
 import HeatMap from '../components/HeatMap.vue'
 import { generateGreeting } from '../composables/useAI'
 import { scheduleEveningReminder } from '../composables/useNotifications'
+import { noHabitsBannerHidden as noHabitsHidden } from '../composables/uiState'
 import logoUrl from '@/assets/logo-wordmark.png'
 
 const router = useRouter()
@@ -106,19 +118,32 @@ const todayCompleted = computed(() => store.todayCompleted)
 
 // === AI-приветствие ===
 const PLACEHOLDER = 'С чего начнём сегодня? Даже 5 минут — это шаг.'
+const PLACEHOLDER_NO_HABITS = 'С чего начнём? Даже один маленький шаг важен.'
+const NO_HABITS_KEY = '__none__' // метка кэша приветствия для кейса без привычек
 const greetingText = ref(PLACEHOLDER)
 const todayStr = () => new Date().toISOString().split('T')[0]
 const isDoneToday = (h) => !!h && h.completedDates.includes(todayStr())
+
+// У пользователя ещё нет ни одной привычки — баннер работает в особом режиме.
+const noHabits = computed(() => store.habits.length === 0)
+// Скрытие баннера для нового юзера («Не сейчас»). Флаг на уровне модуля — переживает
+// переключение вкладок, но сбрасывается при перезапуске приложения (тогда баннер
+// снова покажется при входе). Импортируем из общего uiState.
 
 // Привычка из баннера закрепляется при генерации приветствия (aiGreetingHabitId),
 // чтобы текст и кнопка были про одну и ту же привычку, даже после выполнения других.
 // До генерации (или если привычку удалили) — первая невыполненная.
 const pinnedHabit = computed(() =>
-  store.aiGreetingHabitId ? store.habits.find((h) => h.id === store.aiGreetingHabitId) : null,
+  store.aiGreetingHabitId && store.aiGreetingHabitId !== NO_HABITS_KEY
+    ? store.habits.find((h) => h.id === store.aiGreetingHabitId)
+    : null,
 )
 const targetHabit = computed(() => pinnedHabit.value || pendingHabits.value[0] || null)
 
 const showGreeting = computed(() => {
+  // Новый юзер (нет привычек): дневной dismiss не применяется — баннер показывается
+  // при каждом входе; «Не сейчас» прячет только на текущую сессию.
+  if (noHabits.value) return !noHabitsHidden.value
   if (store.aiGreetingDismissedDate === todayStr()) return false
   if (!targetHabit.value) return false
   // Привычку из баннера уже выполнили сегодня — не зовём её снова.
@@ -149,10 +174,37 @@ async function remindLater() {
 
 onMounted(async () => {
   const today = todayStr()
-  // Блок скрыт на сегодня («Не сейчас») — не генерируем, API не трогаем.
+
+  // Кейс «нет ни одной привычки»: мягкий вопрос вместо обычного приветствия.
+  // Показываем всегда (дневной dismiss не применяем), текст кэшируем на день —
+  // чтобы не дёргать API при каждом входе.
+  if (noHabits.value) {
+    greetingText.value = PLACEHOLDER_NO_HABITS
+    if (store.aiGreetingDate === today && store.aiGreeting && store.aiGreetingHabitId === NO_HABITS_KEY) {
+      greetingText.value = store.aiGreeting
+      return
+    }
+    try {
+      const text = await generateGreeting({}) // без привычки → ветка «нет привычек»
+      if (text) {
+        greetingText.value = text
+        store.setAiGreeting(text, NO_HABITS_KEY)
+      }
+    } catch (e) {
+      console.log('greeting error:', e)
+    }
+    return
+  }
+
+  // Есть привычки: блок скрыт на сегодня («Не сейчас») — не генерируем.
   if (store.aiGreetingDismissedDate === today) return
   // Используем сохранённое приветствие, только если оно с закреплённой привычкой.
-  if (store.aiGreetingDate === today && store.aiGreeting && store.aiGreetingHabitId) {
+  if (
+    store.aiGreetingDate === today &&
+    store.aiGreeting &&
+    store.aiGreetingHabitId &&
+    store.aiGreetingHabitId !== NO_HABITS_KEY
+  ) {
     greetingText.value = store.aiGreeting
     return
   }

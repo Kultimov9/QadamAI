@@ -42,6 +42,7 @@
       <button class="btn light-btn" :disabled="selectedHabits.length === 0" @click="finish">
         Начать →
       </button>
+      <button class="skip-link" @click="skipOnboarding">Пропустить — настрою позже</button>
     </div>
 
     <div class="dots">
@@ -59,6 +60,7 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useHabitsStore } from '../stores/habits'
+import { logEvent } from '../composables/useAnalytics'
 
 const router = useRouter()
 const store = useHabitsStore()
@@ -87,6 +89,14 @@ async function finish() {
   for (const h of selectedHabits.value) {
     await store.addHabit(h.name, h.emoji, h.duration)
   }
+  logEvent('onboarding_completed', { count: selectedHabits.value.length })
+  await store.setOnboarded()
+  router.replace('/')
+}
+
+// Пропустить онбординг: без создания привычек, сразу на главную.
+async function skipOnboarding() {
+  logEvent('onboarding_skipped', { count: selectedHabits.value.length })
   await store.setOnboarded()
   router.replace('/')
 }
@@ -258,6 +268,16 @@ async function finish() {
 .light-btn:disabled {
   background: #2a2a2a !important;
   cursor: default;
+}
+
+.skip-link {
+  background: none;
+  border: none;
+  color: #5a5a55;
+  font-size: 14px;
+  cursor: pointer;
+  padding: 12px;
+  margin-top: 4px;
 }
 
 .dots {
