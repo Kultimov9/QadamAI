@@ -104,6 +104,11 @@ export const useHabitsStore = defineStore('habits', {
       }))
       this.onboarded = profileRes.data?.onboarded || false
 
+      // Парные привычки — грузим отдельным стором, не блокируя роутинг.
+      import('./pairs')
+        .then(({ usePairsStore }) => usePairsStore().fetchPairs())
+        .catch((e) => console.log('fetchPairs error:', e))
+
       // Сохраняем почту в profiles для идентификации юзеров в админке.
       // Fire-and-forget, только если ещё не записана или изменилась.
       if (user.email && profileRes.data?.email !== user.email) {

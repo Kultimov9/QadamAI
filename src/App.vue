@@ -7,16 +7,29 @@
 
 <script setup>
 import { onMounted } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
+import { App as CapApp } from '@capacitor/app'
 import BottomNav from './components/BottomNav.vue'
 import { setupNotifications } from './composables/useNotifications'
 import { generateNotifications } from './composables/useAI'
 import { useHabitsStore } from './stores/habits'
+import { usePairsStore } from './stores/pairs'
 import { supabase } from './lib/supabase'
 import { logLoginEvent, setupResumeTracking } from './lib/loginEvents'
 import { logEvent } from './composables/useAnalytics'
 
 const route = useRoute()
+const router = useRouter()
+
+// Deep-link приёма парной привычки: oyan://join/CODE (или https .../join/CODE).
+// Достаём код, кладём в стор — «Привычки» примут его при открытии.
+CapApp.addListener('appUrlOpen', ({ url }) => {
+  const m = url.match(/join\/([A-Za-z0-9]+)/)
+  if (m) {
+    usePairsStore().pendingJoinCode = m[1].toUpperCase()
+    router.push('/habits')
+  }
+})
 
 onMounted(async () => {
   const store = useHabitsStore()

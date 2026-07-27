@@ -22,6 +22,8 @@
       </div>
 
       <template v-if="activeTab === 'habits'">
+        <PairHabits />
+
         <div class="section">
           <p class="section-label">Сегодня осталось</p>
           <div class="habit-list">
@@ -89,7 +91,13 @@
               <label class="duration-label">Минут: {{ newDuration }}</label>
               <input v-model="newDuration" type="range" min="1" max="60" class="slider" />
             </div>
-            <button class="add-btn" @click="addHabit">Добавить</button>
+            <div class="pair-toggle-row" @click="pairMode = !pairMode">
+              <span class="pair-toggle-label">Парная привычка (с другом)</span>
+              <span class="pair-toggle" :class="{ on: pairMode }"><span class="knob" /></span>
+            </div>
+            <button class="add-btn" @click="addHabit">
+              {{ pairMode ? 'Создать и позвать друга' : 'Добавить' }}
+            </button>
           </div>
         </div>
 
@@ -192,6 +200,22 @@
           </div>
         </div>
       </div>
+
+      <!-- Модалка приглашения после создания парной привычки -->
+      <div v-if="inviteCode" class="modal-overlay" @click="closeInvite">
+        <div class="modal" @click.stop>
+          <p class="modal-title">Парная привычка создана</p>
+          <p class="modal-desc">
+            Отправь другу ссылку. Как примет — увидите прогресс друг друга каждый день.
+          </p>
+          <div class="invite-link">{{ inviteLinkText }}</div>
+          <div class="modal-actions">
+            <button class="modal-cancel" @click="copyCode">Скопировать код</button>
+            <button class="modal-confirm alt" @click="doShare">Поделиться</button>
+          </div>
+          <p v-if="copied" class="copied-hint">Скопировано в буфер</p>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -200,13 +224,34 @@
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useHabitsStore } from '../stores/habits'
+import { usePairsStore } from '../stores/pairs'
 import { setupNotifications } from '../composables/useNotifications'
+import { shareInvite, copyText, inviteLink } from '../composables/share'
 import { Trash2 } from 'lucide-vue-next'
 import ProgressChart from '../components/ProgressChart.vue'
+import PairHabits from '../components/PairHabits.vue'
 
 const router = useRouter()
 const store = useHabitsStore()
+const pairsStore = usePairsStore()
 const activeTab = ref('habits')
+
+// Парная привычка
+const pairMode = ref(false)
+const inviteCode = ref('')
+const copied = ref(false)
+const inviteLinkText = computed(() => (inviteCode.value ? inviteLink(inviteCode.value) : ''))
+
+function closeInvite() {
+  inviteCode.value = ''
+  copied.value = false
+}
+async function copyCode() {
+  copied.value = (await copyText(inviteCode.value)) === true
+}
+function doShare() {
+  shareInvite(inviteCode.value)
+}
 
 const pendingHabits = computed(() => store.todayPending)
 const completedHabits = computed(() => store.todayCompleted)
@@ -230,13 +275,21 @@ function pickEmoji(e) {
   showEmojiPicker.value = false
 }
 
-function addHabit() {
-  if (!newName.value.trim()) return
-  store.addHabit(newName.value.trim(), newEmoji.value, Number(newDuration.value))
+async function addHabit() {
+  const name = newName.value.trim()
+  if (!name) return
+  if (pairMode.value) {
+    // Парная: создаём пару и показываем модалку с приглашением.
+    const code = await pairsStore.createPair(name, newEmoji.value, Number(newDuration.value))
+    if (code) inviteCode.value = code
+  } else {
+    store.addHabit(name, newEmoji.value, Number(newDuration.value))
+  }
   newName.value = ''
   newEmoji.value = '⭐'
   newDuration.value = 5
   showEmojiPicker.value = false
+  pairMode.value = false
 }
 
 function confirmDelete(habit) {
@@ -485,6 +538,44 @@ function habitProgress(count) {
   font-weight: 500;
   cursor: pointer;
 }
+.pair-toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  padding: 2px 0;
+}
+.pair-toggle-label {
+  font-size: 14px;
+  color: #9a9a92;
+}
+.pair-toggle {
+  width: 44px;
+  height: 26px;
+  border-radius: 999px;
+  background: #2a2a2a;
+  border: 1px solid #242424;
+  position: relative;
+  transition: background 0.2s;
+  flex-shrink: 0;
+}
+.pair-toggle .knob {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #9a9a92;
+  transition: transform 0.2s, background 0.2s;
+}
+.pair-toggle.on {
+  background: #f5f0e8;
+}
+.pair-toggle.on .knob {
+  transform: translateX(18px);
+  background: #0a0a0a;
+}
 .notif-card {
   background: #1a1a1a;
   border-radius: 16px;
@@ -678,6 +769,26 @@ function habitProgress(count) {
   color: #0a0a0a;
   font-weight: 500;
   cursor: pointer;
+}
+.modal-confirm.alt {
+  background: #f5f0e8;
+}
+.invite-link {
+  background: #0a0a0a;
+  border: 1px solid #242424;
+  border-radius: 10px;
+  padding: 12px;
+  font-size: 13px;
+  color: #f5f0e8;
+  word-break: break-all;
+  text-align: center;
+  margin: 4px 0 14px;
+}
+.copied-hint {
+  text-align: center;
+  color: #22c55e;
+  font-size: 12px;
+  margin: 10px 0 0;
 }
 .page-header {
   position: sticky;
