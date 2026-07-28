@@ -5,7 +5,9 @@ import { logEvent } from '../composables/useAnalytics'
 const todayStr = () => new Date().toISOString().split('T')[0]
 const iso = (d) => d.toISOString().split('T')[0]
 
-// 8 символов A-Z0-9 для invite-кода.
+// Код приглашения: 8 символов A-Z0-9 (без спецсимволов и регистра — безопасно
+// для ссылок и парсинга). Если у колонки invite_code есть своя генерация в БД —
+// вернём фактический код из ответа (data.invite_code).
 function genCode() {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
   let s = ''
@@ -144,7 +146,33 @@ export const usePairsStore = defineStore('pairs', {
       this.userId = user.id
       this.pairs.unshift({ ...data, completions: [] })
       logEvent('pair_created', { pair_id: data.id, habit_name: name })
-      return code
+      // Реально сохранённый код (если у БД своя генерация — вернём её значение).
+      return data.invite_code || code
+    },
+
+    // Завершить пару (для обоих). Статус 'ended' виден обеим сторонам.
+    async endPair(pairId) {
+      const pair = this.pairs.find((p) => p.id === pairId)
+      const { error } = await supabase
+        .from('habit_pairs')
+        .update({ status: 'ended' })
+        .eq('id', pairId)
+      if (error) {
+        console.error('endPair error:', error)
+        return
+      }
+      if (pair) pair.status = 'ended'
+      logEvent('pair_ended', { pair_id: pairId, habit_name: pair?.habit_name })
+    },
+
+    // Убрать завершённую пару из списка (жёсткое удаление строки).
+    async removePair(pairId) {
+      const { error } = await supabase.from('habit_pairs').delete().eq('id', pairId)
+      if (error) {
+        console.error('removePair error:', error)
+        return
+      }
+      this.pairs = this.pairs.filter((p) => p.id !== pairId)
     },
 
     async acceptInvite(code) {

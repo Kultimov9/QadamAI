@@ -25,7 +25,16 @@
     </div>
 
     <div class="header">
-      <p class="greeting">{{ greeting }}</p>
+      <div class="header-top">
+        <p class="greeting">{{ greeting }}</p>
+        <button class="profile-chip" @click="router.push('/profile')">
+          <span class="nick">{{ displayName }}</span>
+          <span class="avatar" :class="{ img: store.avatarUrl }">
+            <img v-if="store.avatarUrl" :src="store.avatarUrl" alt="" />
+            <span v-else>{{ avatarLetter }}</span>
+          </span>
+        </button>
+      </div>
       <h1 class="title">
         <span v-if="pendingHabits.length > 0">
           Сегодня {{ pendingHabits.length }} {{ declinate(pendingHabits.length) }}.<br />Начни с
@@ -113,6 +122,14 @@ const store = useHabitsStore()
 
 const pendingHabits = computed(() => store.todayPending)
 const startableHabits = computed(() => store.todayStartable)
+
+// Профиль в шапке: имя = ник или часть email до @; буква для запасного аватара.
+const displayName = computed(
+  () => store.username || (store.email ? store.email.split('@')[0] : 'Профиль'),
+)
+const avatarLetter = computed(() =>
+  (store.username || store.email || '?').charAt(0).toUpperCase(),
+)
 const completedHabits = computed(() => store.todayCompleted)
 const todayCompleted = computed(() => store.todayCompleted)
 
@@ -353,10 +370,54 @@ const challengeProgress = computed(() => {
 .greet-fade-leave-to {
   opacity: 0;
 }
+.header-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 6px;
+}
 .greeting {
   font-size: 14px;
   color: #9a9a92;
-  margin: 0 0 6px;
+  margin: 0;
+}
+.profile-chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  max-width: 55%;
+}
+.profile-chip .nick {
+  font-size: 14px;
+  color: #f5f0e8;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.profile-chip .avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: #1a1a1a;
+  border: 1px solid #242424;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #f5f0e8;
+  font-size: 15px;
+  font-weight: 600;
+  overflow: hidden;
+}
+.profile-chip .avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 .title {
   font-size: 26px;

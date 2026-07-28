@@ -10,6 +10,9 @@ let loadPromise = null
 export const useHabitsStore = defineStore('habits', {
   state: () => ({
     userId: null,
+    email: null,
+    username: null,
+    avatarUrl: null,
     habits: [],
     tasks: [],
     goals: [],
@@ -103,6 +106,9 @@ export const useHabitsStore = defineStore('habits', {
         note: r.note,
       }))
       this.onboarded = profileRes.data?.onboarded || false
+      this.username = profileRes.data?.username || null
+      this.avatarUrl = profileRes.data?.avatar_url || null
+      this.email = user.email || null
 
       // Парные привычки — грузим отдельным стором, не блокируя роутинг.
       import('./pairs')
@@ -134,11 +140,54 @@ export const useHabitsStore = defineStore('habits', {
       await supabase.auth.signOut()
       loadPromise = null
       this.userId = null
+      this.email = null
+      this.username = null
+      this.avatarUrl = null
       this.habits = []
       this.tasks = []
       this.goals = []
       this.reflections = []
       this.onboarded = false
+    },
+
+    // === Профиль ===
+    // Валидация: 3-20 символов, только a-z, 0-9, _, приводим к lowercase.
+    async updateUsername(name) {
+      const clean = (name || '').trim().toLowerCase()
+      if (!/^[a-z0-9_]{3,20}$/.test(clean)) {
+        return { ok: false, error: '3–20 символов: латиница, цифры, _' }
+      }
+      const { error } = await supabase.from('profiles').upsert({ id: this.userId, username: clean })
+      if (error) {
+        if (error.code === '23505') return { ok: false, error: 'Ник занят' }
+        return { ok: false, error: error.message || 'Не удалось сохранить' }
+      }
+      this.username = clean
+      logEvent('username_updated', {})
+      return { ok: true }
+    },
+
+    // Загружает аватар: ресайз до 512 jpeg → bucket avatars/{uid}/avatar.jpg (upsert).
+    async uploadAvatar(dataUrl) {
+      try {
+        const { resizeToJpegBlob } = await import('../composables/image')
+        const blob = await resizeToJpegBlob(dataUrl, 512, 0.8)
+        const path = `${this.userId}/avatar.jpg`
+        const { error: upErr } = await supabase.storage
+          .from('avatars')
+          .upload(path, blob, { upsert: true, contentType: 'image/jpeg' })
+        if (upErr) return { ok: false, error: upErr.message || 'Не удалось загрузить' }
+
+        const { data } = supabase.storage.from('avatars').getPublicUrl(path)
+        // cache-buster ?t — иначе iOS покажет старую закэшированную картинку.
+        const url = `${data.publicUrl}?t=${Date.now()}`
+        await supabase.from('profiles').upsert({ id: this.userId, avatar_url: url })
+        this.avatarUrl = url
+        logEvent('avatar_updated', {})
+        return { ok: true }
+      } catch (e) {
+        return { ok: false, error: e.message || 'Ошибка загрузки' }
+      }
     },
 
     // === Привычки ===

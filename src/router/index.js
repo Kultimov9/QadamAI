@@ -9,6 +9,7 @@ import OnboardingView from '../views/OnboardingView.vue'
 import TasksView from '../views/TasksView.vue'
 import AIView from '../views/AIView.vue'
 import AuthView from '../views/AuthView.vue'
+import ProfileView from '../views/ProfileView.vue'
 
 const routes = [
   { path: '/', component: HomeView },
@@ -19,6 +20,7 @@ const routes = [
   { path: '/tasks', component: TasksView },
   { path: '/ai', component: AIView },
   { path: '/auth', component: AuthView },
+  { path: '/profile', component: ProfileView },
 ]
 
 const router = createRouter({

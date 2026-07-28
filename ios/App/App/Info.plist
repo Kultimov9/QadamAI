@@ -6,6 +6,8 @@
 	<string>en</string>
 	<key>CFBundleDisplayName</key>
 	<string>Oyan</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Нужен доступ к фото, чтобы установить аватар профиля.</string>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>

@@ -7,6 +7,7 @@
         v-for="pair in pairsStore.pairs"
         :key="pair.id"
         class="pair-card"
+        :class="{ ended: pair.status === 'ended' }"
         @click="onCardTap(pair)"
       >
         <div class="pair-main">
@@ -19,24 +20,54 @@
           </div>
         </div>
 
-        <!-- Статусы: Ты / Друг. Тап по «Ты» отмечает выполнение на сегодня. -->
-        <div v-if="pair.status !== 'pending'" class="pair-status">
-          <button class="status-item" @click.stop="complete(pair)">
-            <span class="circle" :class="{ done: pairsStore.myStatusToday(pair) }">
-              <Check v-if="pairsStore.myStatusToday(pair)" :size="15" />
-              <span v-else class="plus">+</span>
-            </span>
-            <span class="status-label">Ты</span>
+        <div class="pair-right">
+          <!-- Завершённая: только «Убрать» -->
+          <button
+            v-if="pair.status === 'ended'"
+            class="remove-btn"
+            @click.stop="pairsStore.removePair(pair.id)"
+          >
+            Убрать
           </button>
-          <div class="status-item">
-            <span class="circle friend" :class="{ done: pairsStore.partnerStatusToday(pair) }">
-              <Check v-if="pairsStore.partnerStatusToday(pair)" :size="15" />
-            </span>
-            <span class="status-label">Друг</span>
-          </div>
-        </div>
 
-        <button v-else class="reshare-btn" @click.stop="reshare(pair)">Поделиться</button>
+          <template v-else>
+            <!-- Статусы Ты / Друг (тап по «Ты» отмечает выполнение) -->
+            <div v-if="pair.status !== 'pending'" class="pair-status">
+              <button class="status-item" @click.stop="complete(pair)">
+                <span class="circle" :class="{ done: pairsStore.myStatusToday(pair) }">
+                  <Check v-if="pairsStore.myStatusToday(pair)" :size="15" />
+                  <span v-else class="plus">+</span>
+                </span>
+                <span class="status-label">Ты</span>
+              </button>
+              <div class="status-item">
+                <span class="circle friend" :class="{ done: pairsStore.partnerStatusToday(pair) }">
+                  <Check v-if="pairsStore.partnerStatusToday(pair)" :size="15" />
+                </span>
+                <span class="status-label">Друг</span>
+              </div>
+            </div>
+            <button v-else class="reshare-btn" @click.stop="reshare(pair)">Поделиться</button>
+
+            <button class="pair-del" title="Завершить" @click.stop="pairToEnd = pair">
+              <X :size="16" />
+            </button>
+          </template>
+        </div>
+      </div>
+    </div>
+
+    <!-- Подтверждение завершения пары -->
+    <div v-if="pairToEnd" class="pm-overlay" @click="pairToEnd = null">
+      <div class="pm" @click.stop>
+        <p class="pm-title">Завершить парную привычку?</p>
+        <p class="pm-desc">
+          «{{ pairToEnd.habit_name }}» завершится у обоих участников. Продолжать будет нельзя.
+        </p>
+        <div class="pm-actions">
+          <button class="pm-cancel" @click="pairToEnd = null">Отмена</button>
+          <button class="pm-confirm" @click="doEnd">Завершить</button>
+        </div>
       </div>
     </div>
 
@@ -48,11 +79,11 @@
       <input
         v-model="joinCode"
         class="join-input"
-        placeholder="Код (8 символов)"
-        maxlength="8"
+        placeholder="Код от друга"
+        maxlength="12"
         @input="joinError = ''"
       />
-      <button class="join-btn" :disabled="joining || joinCode.length < 4" @click="join">
+      <button class="join-btn" :disabled="joining || !joinCode.trim()" @click="join">
         {{ joining ? '...' : 'Принять' }}
       </button>
     </div>
@@ -63,7 +94,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import { Check } from 'lucide-vue-next'
+import { Check, X } from 'lucide-vue-next'
 import { usePairsStore } from '../stores/pairs'
 import { shareInvite } from '../composables/share'
 
@@ -74,6 +105,12 @@ const joinCode = ref('')
 const joining = ref(false)
 const joinError = ref('')
 const joined = ref(false)
+const pairToEnd = ref(null)
+
+function doEnd() {
+  if (pairToEnd.value) pairsStore.endPair(pairToEnd.value.id)
+  pairToEnd.value = null
+}
 
 // Автоприём кода из deep-link (друг перешёл по ссылке → приложение → сюда).
 onMounted(async () => {
@@ -87,10 +124,10 @@ onMounted(async () => {
     joined.value = true
     setTimeout(() => (joined.value = false), 2500)
   } else {
-    // Показываем поле с кодом, чтобы пользователь мог принять вручную/увидеть причину.
+    // Показываем поле с кодом и сам код в ошибке — чтобы сверить с базой.
     showJoin.value = true
     joinCode.value = code
-    joinError.value = res.error
+    joinError.value = `${res.error} (код: ${code})`
   }
 })
 
@@ -108,6 +145,7 @@ function dayWord(n) {
 
 // Понятная подпись под названием: что происходит с парой прямо сейчас.
 function pairSub(pair) {
+  if (pair.status === 'ended') return 'Пара завершена'
   if (pair.status === 'pending') return 'ждём друга'
   const my = pairsStore.myStatusToday(pair)
   const partner = pairsStore.partnerStatusToday(pair)
@@ -122,7 +160,7 @@ function pairSub(pair) {
 
 // Тап по карточке = отметить свою привычку (если пара активна).
 function onCardTap(pair) {
-  if (pair.status !== 'pending' && !pairsStore.myStatusToday(pair)) {
+  if (pair.status === 'active' && !pairsStore.myStatusToday(pair)) {
     pairsStore.completePairToday(pair.id)
   }
 }
@@ -133,8 +171,9 @@ function reshare(pair) {
 
 async function join() {
   joinError.value = ''
-  const code = joinCode.value.trim().toUpperCase()
-  if (code.length < 4) return
+  // Код регистрозависимый (генерит БД) — не меняем регистр.
+  const code = joinCode.value.trim()
+  if (!code) return
   joining.value = true
   const res = await pairsStore.acceptInvite(code)
   joining.value = false
@@ -256,6 +295,90 @@ async function join() {
   font-size: 13px;
   cursor: pointer;
 }
+.pair-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.pair-del {
+  background: none;
+  border: none;
+  color: #5a5a55;
+  padding: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+}
+.remove-btn {
+  background: transparent;
+  border: 1px solid #2a2a2a;
+  color: #9a9a92;
+  border-radius: 10px;
+  padding: 8px 14px;
+  font-size: 13px;
+  cursor: pointer;
+}
+.pair-card.ended {
+  opacity: 0.55;
+  cursor: default;
+}
+/* Модалка подтверждения завершения */
+.pm-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  z-index: 50;
+}
+.pm {
+  width: 100%;
+  max-width: 320px;
+  background: #141414;
+  border: 1px solid #242424;
+  border-radius: 18px;
+  padding: 20px;
+}
+.pm-title {
+  font-size: 17px;
+  font-weight: 600;
+  color: #ffffff;
+  margin: 0 0 8px;
+}
+.pm-desc {
+  font-size: 14px;
+  color: #9a9a92;
+  line-height: 1.5;
+  margin: 0 0 18px;
+}
+.pm-actions {
+  display: flex;
+  gap: 10px;
+}
+.pm-cancel {
+  flex: 1;
+  background: #2a2a2a;
+  border: none;
+  border-radius: 12px;
+  padding: 13px;
+  font-size: 15px;
+  color: #9a9a92;
+  cursor: pointer;
+}
+.pm-confirm {
+  flex: 1;
+  background: #f5f0e8;
+  border: none;
+  border-radius: 12px;
+  padding: 13px;
+  font-size: 15px;
+  color: #0a0a0a;
+  font-weight: 500;
+  cursor: pointer;
+}
 .join-link {
   display: block;
   width: 100%;
@@ -281,12 +404,9 @@ async function join() {
   font-size: 14px;
   color: #ffffff;
   outline: none;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
 }
 .join-input::placeholder {
   color: #5a5a55;
-  letter-spacing: normal;
 }
 .join-btn {
   background: #f5f0e8;

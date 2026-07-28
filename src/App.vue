@@ -1,7 +1,9 @@
 <template>
   <div class="app">
     <router-view />
-    <BottomNav v-if="route.path !== '/onboarding' && route.path !== '/auth'" />
+    <BottomNav
+      v-if="route.path !== '/onboarding' && route.path !== '/auth' && route.path !== '/profile'"
+    />
   </div>
 </template>
 
@@ -22,11 +24,11 @@ const route = useRoute()
 const router = useRouter()
 
 // Deep-link приёма парной привычки: oyan://join/CODE (или https .../join/CODE).
-// Достаём код, кладём в стор — «Привычки» примут его при открытии.
+// Берём весь код до слэша/?/# как есть (регистр важен, код может содержать -/_).
 CapApp.addListener('appUrlOpen', ({ url }) => {
-  const m = url.match(/join\/([A-Za-z0-9]+)/)
+  const m = url.match(/join\/([^/?#]+)/)
   if (m) {
-    usePairsStore().pendingJoinCode = m[1].toUpperCase()
+    usePairsStore().pendingJoinCode = decodeURIComponent(m[1])
     router.push('/habits')
   }
 })
