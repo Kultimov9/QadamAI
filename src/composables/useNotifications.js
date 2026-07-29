@@ -90,6 +90,43 @@ export async function cancelNotificationsForHabit(habitName) {
   }
 }
 
+// Мгновенный локальный пуш о подталкивании (когда друг зовёт).
+// id 98 — разовый, не пересекается с 1/2/99/кастомными (100+).
+export async function notifyNudge(fromName, habitName) {
+  try {
+    const permission = await LocalNotifications.requestPermissions()
+    if (permission.display !== 'granted') return
+    await LocalNotifications.schedule({
+      notifications: [
+        {
+          id: 98,
+          title: 'Oyan',
+          body: `${fromName} зовёт сделать «${habitName}» прямо сейчас`,
+          schedule: { at: new Date(Date.now() + 300) },
+        },
+      ],
+    })
+  } catch (e) {
+    console.log('notifyNudge error:', e)
+  }
+}
+
+// Мгновенный локальный пуш общего вида (запрос дружбы / приглашение в пару).
+// id 97 — разовый, не пересекается с прочими.
+export async function notifyInfo(body) {
+  try {
+    const permission = await LocalNotifications.requestPermissions()
+    if (permission.display !== 'granted') return
+    await LocalNotifications.schedule({
+      notifications: [
+        { id: 97, title: 'Oyan', body, schedule: { at: new Date(Date.now() + 300) } },
+      ],
+    })
+  } catch (e) {
+    console.log('notifyInfo error:', e)
+  }
+}
+
 // Разовое вечернее напоминание. Если 20:00 ещё впереди — ставим на 20:00 сегодня.
 // Если уже позже (нажали вечером) — НЕ переносим на завтра, а напоминаем через 2 часа,
 // чтобы напоминание пришло этим же вечером. Возвращаем время, на которое поставили.

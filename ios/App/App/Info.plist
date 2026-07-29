@@ -8,6 +8,10 @@
 	<string>Oyan</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Нужен доступ к фото, чтобы установить аватар профиля.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Нужен доступ к фото, чтобы установить аватар профиля.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Нужен доступ к камере, чтобы сделать фото для аватара.</string>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>

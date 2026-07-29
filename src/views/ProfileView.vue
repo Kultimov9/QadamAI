@@ -35,6 +35,14 @@
         <p v-else class="field-hint">3–20 символов: латиница, цифры, _</p>
       </div>
 
+      <button class="nav-row" @click="router.push('/friends')">
+        <span>Друзья</span>
+        <span class="nav-right">
+          <span v-if="friends.incomingCount" class="badge">{{ friends.incomingCount }}</span>
+          <span class="chevron">›</span>
+        </span>
+      </button>
+
       <p class="email">{{ store.email }}</p>
 
       <button class="logout-btn" @click="logout">Выйти из аккаунта</button>
@@ -47,10 +55,12 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera'
 import { useHabitsStore } from '../stores/habits'
+import { useFriendsStore } from '../stores/friends'
 import { logEvent } from '../composables/useAnalytics'
 
 const router = useRouter()
 const store = useHabitsStore()
+const friends = useFriendsStore()
 
 const nick = ref(store.username || '')
 const saving = ref(false)
@@ -63,7 +73,10 @@ const avatarLetter = computed(() =>
   (store.username || store.email || '?').charAt(0).toUpperCase(),
 )
 
-onMounted(() => logEvent('profile_opened', {}))
+onMounted(() => {
+  logEvent('profile_opened', {})
+  friends.fetchFriends()
+})
 
 async function pickAvatar() {
   if (uploading.value) return
@@ -79,8 +92,12 @@ async function pickAvatar() {
     const res = await store.uploadAvatar(photo.dataUrl)
     if (!res.ok) avatarError.value = res.error
   } catch (e) {
+    const msg = e?.message || String(e)
     // Пользователь отменил выбор — не ошибка.
-    if (e?.message && !/cancel/i.test(e.message)) avatarError.value = 'Не удалось загрузить фото'
+    if (/cancel/i.test(msg)) return
+    // Показываем реальную причину, чтобы диагностировать.
+    avatarError.value = msg
+    console.error('pickAvatar error:', e)
   } finally {
     uploading.value = false
   }
@@ -236,10 +253,46 @@ async function logout() {
   font-size: 13px;
   margin: 8px 0 0;
 }
+.nav-row {
+  width: 100%;
+  margin-top: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #141414;
+  border: 1px solid #242424;
+  border-radius: 12px;
+  padding: 15px 16px;
+  color: #ffffff;
+  font-size: 15px;
+  cursor: pointer;
+}
+.nav-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.badge {
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: #f5f0e8;
+  color: #0a0a0a;
+  font-size: 12px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.chevron {
+  color: #5a5a55;
+  font-size: 20px;
+}
 .email {
   color: #5a5a55;
   font-size: 14px;
-  margin: 12px 0 0;
+  margin: 16px 0 0;
 }
 .logout-btn {
   margin-top: 24px;

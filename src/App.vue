@@ -1,27 +1,35 @@
 <template>
   <div class="app">
     <router-view />
-    <BottomNav
-      v-if="route.path !== '/onboarding' && route.path !== '/auth' && route.path !== '/profile'"
-    />
+    <NudgeToast />
+    <AppToast />
+    <BottomNav v-if="!hideNav" />
   </div>
 </template>
 
 <script setup>
-import { onMounted } from 'vue'
+import { onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { App as CapApp } from '@capacitor/app'
 import BottomNav from './components/BottomNav.vue'
-import { setupNotifications } from './composables/useNotifications'
+import NudgeToast from './components/NudgeToast.vue'
+import AppToast from './components/AppToast.vue'
+import { setupNotifications, notifyNudge, notifyInfo } from './composables/useNotifications'
 import { generateNotifications } from './composables/useAI'
 import { useHabitsStore } from './stores/habits'
 import { usePairsStore } from './stores/pairs'
+import { useFriendsStore } from './stores/friends'
 import { supabase } from './lib/supabase'
 import { logLoginEvent, setupResumeTracking } from './lib/loginEvents'
 import { logEvent } from './composables/useAnalytics'
+import { nudgeToast, appToast } from './composables/uiState'
 
 const route = useRoute()
 const router = useRouter()
+
+const hideNav = computed(() =>
+  ['/onboarding', '/auth', '/profile', '/friends'].includes(route.path),
+)
 
 // Deep-link приёма парной привычки: oyan://join/CODE (или https .../join/CODE).
 // Берём весь код до слэша/?/# как есть (регистр важен, код может содержать -/_).
@@ -55,6 +63,29 @@ onMounted(async () => {
     // Тот же общий промис, что ждёт router guard — данные точно на месте,
     // и двойной загрузки не происходит.
     await store.ensureLoaded()
+
+    // Подписка на подталкивания друзей: тост в приложении + локальный пуш.
+    const pairs = usePairsStore()
+    pairs.subscribeNudges(({ pairId, habitName, fromName }) => {
+      nudgeToast.value = { pairId, habitName, fromName }
+      notifyNudge(fromName, habitName)
+    })
+
+    // Приглашения в пару от друзей.
+    pairs.subscribePairInvites(({ habitName, fromName }) => {
+      const text = `${fromName} зовёт делать «${habitName}» вместе`
+      appToast.value = { text, to: '/habits' }
+      notifyInfo(text)
+    })
+
+    // Друзья: запросы в друзья.
+    const friends = useFriendsStore()
+    friends.fetchFriends()
+    friends.subscribeFriends(() => {
+      const text = 'Новый запрос в друзья'
+      appToast.value = { text, to: '/friends' }
+      notifyInfo(text)
+    })
 
     const today = new Date().toISOString().split('T')[0]
     await setupNotifications()

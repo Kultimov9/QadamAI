@@ -10,6 +10,7 @@ import TasksView from '../views/TasksView.vue'
 import AIView from '../views/AIView.vue'
 import AuthView from '../views/AuthView.vue'
 import ProfileView from '../views/ProfileView.vue'
+import FriendsView from '../views/FriendsView.vue'
 
 const routes = [
   { path: '/', component: HomeView },
@@ -21,6 +22,7 @@ const routes = [
   { path: '/ai', component: AIView },
   { path: '/auth', component: AuthView },
   { path: '/profile', component: ProfileView },
+  { path: '/friends', component: FriendsView },
 ]
 
 const router = createRouter({

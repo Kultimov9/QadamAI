@@ -137,6 +137,17 @@ export const useHabitsStore = defineStore('habits', {
     },
 
     async logout() {
+      // Снимаем Realtime-подписки (подталкивания, приглашения в пару, друзья).
+      import('./pairs')
+        .then(({ usePairsStore }) => {
+          const p = usePairsStore()
+          p.unsubscribeNudges()
+          p.unsubscribePairInvites()
+        })
+        .catch(() => {})
+      import('./friends')
+        .then(({ useFriendsStore }) => useFriendsStore().unsubscribeFriends())
+        .catch(() => {})
       await supabase.auth.signOut()
       loadPromise = null
       this.userId = null
