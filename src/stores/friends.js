@@ -1,0 +1,146 @@
+import { defineStore } from 'pinia'
+import { supabase } from '../lib/supabase'
+import { logEvent } from '../composables/useAnalytics'
+
+// Realtime-канал живёт вне state.
+let friendsChannel = null
+
+export const useFriendsStore = defineStore('friends', {
+  state: () => ({
+    // { friendship_id, other_id, username, avatar_url, status, direction } из get_friends
+    list: [],
+    searchResults: [],
+    userId: null,
+  }),
+
+  getters: {
+    // Входящие запросы: pending + мне прислали.
+    incoming: (state) => state.list.filter((f) => f.status === 'pending' && f.direction === 'incoming'),
+    // Принятые друзья.
+    friends: (state) => state.list.filter((f) => f.status === 'accepted'),
+    incomingCount() {
+      return this.incoming.length
+    },
+    // Статус отношений с конкретным юзером: none | pending | friends.
+    statusWith: (state) => (otherId) => {
+      const f = state.list.find((x) => x.other_id === otherId)
+      if (!f) return 'none'
+      if (f.status === 'accepted') return 'friends'
+      if (f.status === 'pending') return 'pending'
+      return 'none'
+    },
+  },
+
+  actions: {
+    async fetchFriends() {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
+      if (!user) return
+      this.userId = user.id
+      const { data, error } = await supabase.rpc('get_friends')
+      if (error) {
+        console.log('get_friends error:', error)
+        return
+      }
+      this.list = data || []
+    },
+
+    async search(q) {
+      const query = (q || '').trim()
+      if (!query) {
+        this.searchResults = []
+        return
+      }
+      const { data, error } = await supabase.rpc('search_profiles', { q: query })
+      if (error) {
+        console.log('search_profiles error:', error)
+        return
+      }
+      this.searchResults = data || []
+    },
+
+    async sendRequest(otherId) {
+      const { error } = await supabase
+        .from('friendships')
+        .insert({ requester_id: this.userId, addressee_id: otherId, status: 'pending' })
+      if (error) {
+        console.error('sendRequest error:', error)
+        return { ok: false, error: error.message }
+      }
+      logEvent('friend_request_sent', { to: otherId })
+      // Оптимистично добавляем в список как исходящий pending.
+      this.list.push({
+        friendship_id: null,
+        other_id: otherId,
+        username: this.searchResults.find((r) => r.id === otherId)?.username || null,
+        avatar_url: this.searchResults.find((r) => r.id === otherId)?.avatar_url || null,
+        status: 'pending',
+        direction: 'outgoing',
+      })
+      return { ok: true }
+    },
+
+    async acceptRequest(friendshipId) {
+      const { error } = await supabase
+        .from('friendships')
+        .update({ status: 'accepted' })
+        .eq('id', friendshipId)
+      if (error) {
+        console.error('acceptRequest error:', error)
+        return
+      }
+      const f = this.list.find((x) => x.friendship_id === friendshipId)
+      if (f) f.status = 'accepted'
+      logEvent('friend_request_accepted', { friendship_id: friendshipId })
+    },
+
+    async declineRequest(friendshipId) {
+      const { error } = await supabase
+        .from('friendships')
+        .update({ status: 'declined' })
+        .eq('id', friendshipId)
+      if (error) {
+        console.error('declineRequest error:', error)
+        return
+      }
+      this.list = this.list.filter((x) => x.friendship_id !== friendshipId)
+      logEvent('friend_request_declined', { friendship_id: friendshipId })
+    },
+
+    // Подписка на входящие запросы дружбы. onRequest() — колбэк (тост/пуш).
+    async subscribeFriends(onRequest) {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
+      if (!user) return
+      this.userId = user.id
+      if (friendsChannel) return
+      friendsChannel = supabase
+        .channel('friends-in')
+        .on(
+          'postgres_changes',
+          {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'friendships',
+            filter: `addressee_id=eq.${user.id}`,
+          },
+          () => {
+            this.fetchFriends()
+            onRequest?.()
+          },
+        )
+        .subscribe()
+    },
+
+    unsubscribeFriends() {
+      if (friendsChannel) {
+        supabase.removeChannel(friendsChannel)
+        friendsChannel = null
+      }
+      this.list = []
+      this.searchResults = []
+    },
+  },
+})

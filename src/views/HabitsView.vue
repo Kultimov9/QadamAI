@@ -95,9 +95,51 @@
               <span class="pair-toggle-label">Парная привычка (с другом)</span>
               <span class="pair-toggle" :class="{ on: pairMode }"><span class="knob" /></span>
             </div>
+
+            <template v-if="pairMode">
+              <!-- Из друзей / По коду -->
+              <div class="pair-source">
+                <button
+                  class="src-btn"
+                  :class="{ on: pairSource === 'friends' }"
+                  @click="pairSource = 'friends'"
+                >
+                  Из друзей
+                </button>
+                <button
+                  class="src-btn"
+                  :class="{ on: pairSource === 'code' }"
+                  @click="pairSource = 'code'"
+                >
+                  По коду
+                </button>
+              </div>
+
+              <!-- Выбор друга -->
+              <div v-if="pairSource === 'friends'">
+                <div v-if="friends.friends.length" class="friend-chips">
+                  <button
+                    v-for="f in friends.friends"
+                    :key="f.other_id"
+                    class="friend-chip"
+                    :class="{ sel: selectedFriendId === f.other_id }"
+                    @click="selectedFriendId = f.other_id"
+                  >
+                    <span class="fc-av">{{ (f.username || '?').charAt(0).toUpperCase() }}</span>
+                    <span class="fc-name">{{ f.username || 'Друг' }}</span>
+                  </button>
+                </div>
+                <p v-else class="friend-empty">
+                  Нет друзей.
+                  <span class="friend-link" @click="router.push('/friends')">Найти на «Друзья»</span>
+                </p>
+              </div>
+            </template>
+
             <button class="add-btn" @click="addHabit">
-              {{ pairMode ? 'Создать и позвать друга' : 'Добавить' }}
+              {{ pairBtnLabel }}
             </button>
+            <p v-if="pairSent" class="pair-sent">Приглашение отправлено 👍</p>
           </div>
         </div>
 
@@ -221,12 +263,14 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useHabitsStore } from '../stores/habits'
 import { usePairsStore } from '../stores/pairs'
+import { useFriendsStore } from '../stores/friends'
 import { setupNotifications } from '../composables/useNotifications'
 import { shareInvite, copyText, inviteLink } from '../composables/share'
+import { pendingPairFriend } from '../composables/uiState'
 import { Trash2 } from 'lucide-vue-next'
 import ProgressChart from '../components/ProgressChart.vue'
 import PairHabits from '../components/PairHabits.vue'
@@ -234,13 +278,34 @@ import PairHabits from '../components/PairHabits.vue'
 const router = useRouter()
 const store = useHabitsStore()
 const pairsStore = usePairsStore()
+const friends = useFriendsStore()
 const activeTab = ref('habits')
 
 // Парная привычка
 const pairMode = ref(false)
+const pairSource = ref('friends') // 'friends' | 'code'
+const selectedFriendId = ref(null)
+const pairSent = ref(false)
 const inviteCode = ref('')
 const copied = ref(false)
 const inviteLinkText = computed(() => (inviteCode.value ? inviteLink(inviteCode.value) : ''))
+
+const pairBtnLabel = computed(() => {
+  if (!pairMode.value) return 'Добавить'
+  return pairSource.value === 'code' ? 'Создать и позвать по коду' : 'Пригласить друга'
+})
+
+// Подхват друга, выбранного на экране «Друзья» («Создать общую привычку»).
+onMounted(() => {
+  friends.fetchFriends()
+  if (pendingPairFriend.value) {
+    pairMode.value = true
+    pairSource.value = 'friends'
+    selectedFriendId.value = pendingPairFriend.value.id
+    activeTab.value = 'habits'
+    pendingPairFriend.value = null
+  }
+})
 
 function closeInvite() {
   inviteCode.value = ''
@@ -278,18 +343,32 @@ function pickEmoji(e) {
 async function addHabit() {
   const name = newName.value.trim()
   if (!name) return
-  if (pairMode.value) {
-    // Парная: создаём пару и показываем модалку с приглашением.
+  pairSent.value = false
+
+  if (pairMode.value && pairSource.value === 'friends') {
+    // Приглашение конкретного друга (карточка-инвайт появится у него).
+    if (!selectedFriendId.value) return
+    const code = await pairsStore.createPair(
+      name,
+      newEmoji.value,
+      Number(newDuration.value),
+      selectedFriendId.value,
+    )
+    if (code) pairSent.value = true
+  } else if (pairMode.value) {
+    // По коду: создаём пару и показываем модалку с приглашением.
     const code = await pairsStore.createPair(name, newEmoji.value, Number(newDuration.value))
     if (code) inviteCode.value = code
   } else {
     store.addHabit(name, newEmoji.value, Number(newDuration.value))
   }
+
   newName.value = ''
   newEmoji.value = '⭐'
   newDuration.value = 5
   showEmojiPicker.value = false
   pairMode.value = false
+  selectedFriendId.value = null
 }
 
 function confirmDelete(habit) {
@@ -575,6 +654,82 @@ function habitProgress(count) {
 .pair-toggle.on .knob {
   transform: translateX(18px);
   background: #0a0a0a;
+}
+.pair-source {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+.src-btn {
+  flex: 1;
+  background: #141414;
+  border: 1px solid #242424;
+  border-radius: 12px;
+  padding: 10px 0;
+  font-size: 14px;
+  color: #9a9a92;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+.src-btn.on {
+  background: #f5f0e8;
+  color: #0a0a0a;
+  border-color: #f5f0e8;
+  font-weight: 600;
+}
+.friend-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+.friend-chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #141414;
+  border: 1px solid #242424;
+  border-radius: 999px;
+  padding: 6px 12px 6px 6px;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+.friend-chip.sel {
+  border-color: #f5f0e8;
+  background: #242424;
+}
+.fc-av {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #2a2a2a;
+  color: #f5f0e8;
+  font-size: 12px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.fc-name {
+  font-size: 14px;
+  color: #f5f0e8;
+}
+.friend-empty {
+  font-size: 13px;
+  color: #5a5a55;
+  margin: 8px 0 0;
+}
+.friend-link {
+  color: #f5f0e8;
+  cursor: pointer;
+  text-decoration: underline;
+}
+.pair-sent {
+  font-size: 13px;
+  color: #22c55e;
+  margin: 8px 0 0;
+  text-align: center;
 }
 .notif-card {
   background: #1a1a1a;
