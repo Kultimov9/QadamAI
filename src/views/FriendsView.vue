@@ -43,15 +43,26 @@
 
       <!-- Поиск -->
       <div class="section">
-        <p class="section-label">Найти по нику</p>
-        <input v-model="query" class="search-input" placeholder="Ник друга" autocapitalize="off" />
+        <p class="section-label">Найти по нику или почте</p>
+        <input
+          v-model="query"
+          class="search-input"
+          placeholder="Ник или почта"
+          autocapitalize="off"
+          autocorrect="off"
+          spellcheck="false"
+          inputmode="email"
+        />
         <div v-if="query.trim() && store.searchResults.length">
           <div class="row" v-for="r in store.searchResults" :key="r.id">
             <span class="avatar" :class="{ img: r.avatar_url }">
               <img v-if="r.avatar_url" :src="r.avatar_url" alt="" />
-              <span v-else>{{ initial(r.username) }}</span>
+              <span v-else>{{ initial(displayName(r)) }}</span>
             </span>
-            <span class="name">{{ r.username }}</span>
+            <span class="name">
+              {{ displayName(r) }}
+              <i v-if="!r.username" class="name-note">ник ещё не задан</i>
+            </span>
             <button
               class="btn-primary sm"
               :disabled="store.statusWith(r.id) !== 'none'"
@@ -61,7 +72,12 @@
             </button>
           </div>
         </div>
-        <p v-else-if="query.trim() && !searching" class="empty">Никого не нашли по «{{ query }}»</p>
+        <template v-else-if="query.trim() && !searching">
+          <p class="empty">Никого не нашли по «{{ query }}»</p>
+          <p v-if="!looksLikeEmail(query)" class="hint">
+            Если друг ещё не задал ник — найди его по почте, введя адрес целиком.
+          </p>
+        </template>
       </div>
     </div>
   </div>
@@ -95,6 +111,17 @@ watch(query, (q) => {
 
 function initial(name) {
   return (name || '?').charAt(0).toUpperCase()
+}
+
+function looksLikeEmail(v) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test((v || '').trim())
+}
+
+// Ник может быть не задан — тогда это совпадение по почте. Показываем введённый
+// адрес: сервер почту не возвращает, а пользователь её и так только что ввёл.
+function displayName(r) {
+  if (r.username) return r.username
+  return looksLikeEmail(query.value) ? query.value.trim() : 'Без ника'
 }
 
 function addLabel(id) {
@@ -193,6 +220,13 @@ function createWith(friend) {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+.name-note {
+  display: block;
+  font-style: normal;
+  font-size: 12px;
+  color: #5a5a55;
+  margin-top: 2px;
+}
 .btn-primary {
   background: #f5f0e8;
   color: #0a0a0a;
@@ -247,5 +281,11 @@ function createWith(friend) {
   font-size: 14px;
   line-height: 1.5;
   margin: 4px 0 0;
+}
+.hint {
+  color: #5a5a55;
+  font-size: 13px;
+  line-height: 1.5;
+  margin: 8px 0 0;
 }
 </style>

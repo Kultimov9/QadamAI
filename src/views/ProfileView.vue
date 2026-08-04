@@ -36,7 +36,8 @@
       </div>
 
       <button class="nav-row" @click="router.push('/friends')">
-        <span>Друзья</span>
+        <span class="nav-icon"><Users :size="18" /></span>
+        <span class="nav-label">Друзья</span>
         <span class="nav-right">
           <span v-if="friends.incomingCount" class="badge">{{ friends.incomingCount }}</span>
           <span class="chevron">›</span>
@@ -54,6 +55,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera'
+import { Users } from 'lucide-vue-next'
 import { useHabitsStore } from '../stores/habits'
 import { useFriendsStore } from '../stores/friends'
 import { logEvent } from '../composables/useAnalytics'
@@ -258,14 +260,26 @@ async function logout() {
   margin-top: 20px;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  background: #141414;
-  border: 1px solid #242424;
-  border-radius: 12px;
-  padding: 15px 16px;
+  gap: 12px;
+  background: none;
+  border: none;
+  border-top: 1px solid #1c1c1c;
+  border-bottom: 1px solid #1c1c1c;
+  border-radius: 0;
+  padding: 16px 4px;
   color: #ffffff;
   font-size: 15px;
   cursor: pointer;
+  text-align: left;
+}
+.nav-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #9a9a92;
+}
+.nav-label {
+  flex: 1;
 }
 .nav-right {
   display: flex;
