@@ -12,6 +12,10 @@
 	<string>Нужен доступ к фото, чтобы установить аватар профиля.</string>
 	<key>NSCameraUsageDescription</key>
 	<string>Нужен доступ к камере, чтобы сделать фото для аватара.</string>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>remote-notification</string>
+	</array>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>

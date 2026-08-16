@@ -148,6 +148,14 @@ export const useHabitsStore = defineStore('habits', {
       import('./friends')
         .then(({ useFriendsStore }) => useFriendsStore().unsubscribeFriends())
         .catch(() => {})
+      // Снимаем подписку на пуши до signOut: удаление строки в device_tokens
+      // идёт под RLS и требует ещё живой сессии.
+      try {
+        const { removePushToken } = await import('../composables/usePush')
+        await removePushToken()
+      } catch (e) {
+        console.log('removePushToken error:', e)
+      }
       await supabase.auth.signOut()
       loadPromise = null
       this.userId = null

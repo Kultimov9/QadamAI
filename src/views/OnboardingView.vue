@@ -61,6 +61,7 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useHabitsStore } from '../stores/habits'
 import { logEvent } from '../composables/useAnalytics'
+import { requestPushPermission } from '../composables/usePush'
 
 const router = useRouter()
 const store = useHabitsStore()
@@ -91,6 +92,9 @@ async function finish() {
   }
   logEvent('onboarding_completed', { count: selectedHabits.value.length })
   await store.setOnboarded()
+  // Момент для системного диалога: привычки уже созданы, ценность напоминаний
+  // понятна. iOS показывает его один раз за установку.
+  await requestPushPermission('onboarding')
   router.replace('/')
 }
 

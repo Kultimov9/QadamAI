@@ -1,0 +1,9 @@
+project_id = "lxrrpmyysbkebpdocawu"
+
+# Вебхуки и ручной вызов приходят без пользовательского JWT — доступ закрыт
+# общим секретом x-push-secret внутри функций.
+[functions.send-push]
+verify_jwt = false
+
+[functions.push-on-insert]
+verify_jwt = false

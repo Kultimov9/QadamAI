@@ -89,6 +89,7 @@ import { useRouter } from 'vue-router'
 import { Users } from 'lucide-vue-next'
 import { useFriendsStore } from '../stores/friends'
 import { pendingPairFriend } from '../composables/uiState'
+import { requestPushPermissionOnce } from '../composables/usePush'
 
 const router = useRouter()
 const store = useFriendsStore()
@@ -97,7 +98,13 @@ const query = ref('')
 const searching = ref(false)
 let debounce = null
 
-onMounted(() => store.fetchFriends())
+onMounted(() => {
+  store.fetchFriends()
+  // Догоняющий запрос для тех, кто прошёл онбординг до появления пушей: у них
+  // finish() уже не вызовется. Экран «Друзья» — уместный контекст: именно
+  // сюда приходят заявки и приглашения. Спрашивается один раз.
+  requestPushPermissionOnce('friends_screen')
+})
 
 // Дебаунс поиска 300мс.
 watch(query, (q) => {

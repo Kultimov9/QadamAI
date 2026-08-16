@@ -16,6 +16,7 @@ import NudgeToast from './components/NudgeToast.vue'
 import AppToast from './components/AppToast.vue'
 import { setupNotifications, notifyNudge, notifyInfo } from './composables/useNotifications'
 import { generateNotifications } from './composables/useAI'
+import { initPush } from './composables/usePush'
 import { useHabitsStore } from './stores/habits'
 import { usePairsStore } from './stores/pairs'
 import { useFriendsStore } from './stores/friends'
@@ -63,6 +64,15 @@ onMounted(async () => {
     // Тот же общий промис, что ждёт router guard — данные точно на месте,
     // и двойной загрузки не происходит.
     await store.ensureLoaded()
+
+    // Remote push: инициализация и переход по тапу. Разрешение здесь НЕ
+    // запрашиваем — только в конце онбординга и на экране «Друзья».
+    initPush({
+      onOpen: (data) => {
+        if (data?.screen === 'friends') router.push('/friends')
+        else if (data?.screen === 'pair') router.push('/habits')
+      },
+    })
 
     // Подписка на подталкивания друзей: тост в приложении + локальный пуш.
     const pairs = usePairsStore()
