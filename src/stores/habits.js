@@ -1,11 +1,18 @@
 import { defineStore } from 'pinia'
 import { supabase } from '../lib/supabase'
 import { logEvent } from '../composables/useAnalytics'
+import { useFriendsStore } from './friends'
+import { usePairsStore } from './pairs'
 
 // Кэш промиса загрузки данных. Живёт вне state, поэтому не персистится и не
 // сериализуется. Гарантирует, что fetchAll() выполнится один раз, а параллельные
 // вызовы (router guard + App.vue) переиспользуют один и тот же промис.
 let loadPromise = null
+
+// Промис текущего обновления. В отличие от loadPromise сбрасывается сразу после
+// завершения: нужен только чтобы схлопнуть параллельные refresh() (переход между
+// экранами + возврат из фона), а не чтобы кэшировать результат навсегда.
+let refreshPromise = null
 
 export const useHabitsStore = defineStore('habits', {
   state: () => ({
@@ -59,6 +66,12 @@ export const useHabitsStore = defineStore('habits', {
     todayTasks: (state) => {
       const today = new Date().toISOString().split('T')[0]
       return state.tasks.filter((t) => t.date === today)
+    },
+    // Общий счётчик для бейджей: входящие заявки в друзья + приглашения в пары.
+    // Сторы подключаются внутри геттера — на верхнем уровне это дало бы цикл
+    // импортов (pairs/friends сами дёргают habits при выходе из аккаунта).
+    pendingCount() {
+      return useFriendsStore().incomingCount + usePairsStore().pendingInvites.length
     },
   },
 
@@ -134,6 +147,17 @@ export const useHabitsStore = defineStore('habits', {
       if (force) loadPromise = null
       if (!loadPromise) loadPromise = this.fetchAll()
       await loadPromise
+    },
+
+    // Перезагрузка данных при входе на экран и возврате из фона. В отличие от
+    // ensureLoaded кэш не используется — данные могли измениться на другом
+    // устройстве. Параллельные вызовы схлопываются в один запрос.
+    async refresh() {
+      if (refreshPromise) return refreshPromise
+      refreshPromise = this.fetchAll().finally(() => {
+        refreshPromise = null
+      })
+      return refreshPromise
     },
 
     async logout() {

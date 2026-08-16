@@ -4,6 +4,8 @@ import { logEvent } from '../composables/useAnalytics'
 
 // Realtime-канал живёт вне state.
 let friendsChannel = null
+// Схлопывает параллельные fetchFriends (переход между экранами + realtime).
+let fetchPromise = null
 
 export const useFriendsStore = defineStore('friends', {
   state: () => ({
@@ -33,6 +35,14 @@ export const useFriendsStore = defineStore('friends', {
 
   actions: {
     async fetchFriends() {
+      if (fetchPromise) return fetchPromise
+      fetchPromise = this._fetchFriends().finally(() => {
+        fetchPromise = null
+      })
+      return fetchPromise
+    },
+
+    async _fetchFriends() {
       const {
         data: { user },
       } = await supabase.auth.getUser()
@@ -108,6 +118,24 @@ export const useFriendsStore = defineStore('friends', {
       logEvent('friend_request_declined', { friendship_id: friendshipId })
     },
 
+    // Локальный патч по событию realtime — без полной перезагрузки списка.
+    patchFriendship(row) {
+      if (!row?.id) return
+      const idx = this.list.findIndex((f) => f.friendship_id === row.id)
+      if (idx === -1) {
+        // Строки ещё нет в списке. Ник и аватар приходят из get_friends, а не из
+        // payload, поэтому показать её без запроса нечем — точечно перезапрашиваем
+        // (вызов дедуплицирован).
+        this.fetchFriends()
+        return
+      }
+      if (row.status === 'declined') {
+        this.list.splice(idx, 1)
+        return
+      }
+      this.list[idx] = { ...this.list[idx], status: row.status }
+    },
+
     // Подписка на входящие запросы дружбы. onRequest() — колбэк (тост/пуш).
     async subscribeFriends(onRequest) {
       const {
@@ -118,6 +146,7 @@ export const useFriendsStore = defineStore('friends', {
       if (friendsChannel) return
       friendsChannel = supabase
         .channel('friends-in')
+        // Новая входящая заявка.
         .on(
           'postgres_changes',
           {
@@ -126,10 +155,33 @@ export const useFriendsStore = defineStore('friends', {
             table: 'friendships',
             filter: `addressee_id=eq.${user.id}`,
           },
-          () => {
-            this.fetchFriends()
+          ({ new: row }) => {
+            this.patchFriendship(row)
             onRequest?.()
           },
+        )
+        // Статус входящей заявки поменяли (например, с другого устройства).
+        .on(
+          'postgres_changes',
+          {
+            event: 'UPDATE',
+            schema: 'public',
+            table: 'friendships',
+            filter: `addressee_id=eq.${user.id}`,
+          },
+          ({ new: row }) => this.patchFriendship(row),
+        )
+        // Мою исходящую заявку приняли или отклонили. Без этой подписки
+        // отправитель не узнал бы об ответе до перезахода в приложение.
+        .on(
+          'postgres_changes',
+          {
+            event: 'UPDATE',
+            schema: 'public',
+            table: 'friendships',
+            filter: `requester_id=eq.${user.id}`,
+          },
+          ({ new: row }) => this.patchFriendship(row),
         )
         .subscribe()
     },

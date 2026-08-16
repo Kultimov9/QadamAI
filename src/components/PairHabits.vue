@@ -16,7 +16,12 @@
       </div>
     </div>
 
-    <p class="section-label">Парные привычки</p>
+    <p class="section-label">
+      Парные привычки
+      <span v-if="pairsStore.pendingInvites.length" class="badge">
+        {{ pairsStore.pendingInvites.length }}
+      </span>
+    </p>
 
     <div class="pair-list">
       <div
@@ -329,6 +334,24 @@ async function join() {
   text-transform: uppercase;
   letter-spacing: 0.05em;
   margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.section-label .badge {
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: #ff4444;
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 .pair-list {
   display: flex;

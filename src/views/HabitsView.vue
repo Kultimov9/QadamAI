@@ -271,6 +271,7 @@ import { useFriendsStore } from '../stores/friends'
 import { setupNotifications } from '../composables/useNotifications'
 import { shareInvite, copyText, inviteLink } from '../composables/share'
 import { pendingPairFriend } from '../composables/uiState'
+import { useScreenRefresh } from '../composables/useScreenRefresh'
 import { Trash2 } from 'lucide-vue-next'
 import ProgressChart from '../components/ProgressChart.vue'
 import PairHabits from '../components/PairHabits.vue'
@@ -295,9 +296,15 @@ const pairBtnLabel = computed(() => {
   return pairSource.value === 'code' ? 'Создать и позвать по коду' : 'Пригласить друга'
 })
 
+// Обновление при каждом входе на экран, а не только при первом монтировании.
+useScreenRefresh(() => {
+  store.refresh()
+  pairsStore.fetchPairs()
+  friends.fetchFriends()
+})
+
 // Подхват друга, выбранного на экране «Друзья» («Создать общую привычку»).
 onMounted(() => {
-  friends.fetchFriends()
   if (pendingPairFriend.value) {
     pairMode.value = true
     pairSource.value = 'friends'

@@ -179,9 +179,13 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { useHabitsStore } from '../stores/habits'
+import { useScreenRefresh } from '../composables/useScreenRefresh'
 import { Plus, Trash2, Check } from 'lucide-vue-next'
 
 const store = useHabitsStore()
+
+// Данные могли измениться на другом устройстве — обновляем при каждом входе.
+useScreenRefresh(() => store.refresh())
 store.clearOldTasks()
 
 const activeTab = ref('tasks')

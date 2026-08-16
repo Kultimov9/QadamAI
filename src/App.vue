@@ -28,6 +28,9 @@ import { nudgeToast, appToast } from './composables/uiState'
 const route = useRoute()
 const router = useRouter()
 
+// Не чаще раза в 30 секунд на возврат из фона.
+const RESUME_THROTTLE_MS = 30_000
+
 const hideNav = computed(() =>
   ['/onboarding', '/auth', '/profile', '/friends'].includes(route.path),
 )
@@ -95,6 +98,18 @@ onMounted(async () => {
       const text = 'Новый запрос в друзья'
       appToast.value = { text, to: '/friends' }
       notifyInfo(text)
+    })
+
+    // Возврат из фона: данные могли измениться на другом устройстве. Троттлинг,
+    // чтобы частые переключения приложений не устраивали шквал запросов.
+    let lastResumeFetch = Date.now()
+    CapApp.addListener('appStateChange', ({ isActive }) => {
+      if (!isActive) return
+      if (Date.now() - lastResumeFetch < RESUME_THROTTLE_MS) return
+      lastResumeFetch = Date.now()
+      store.refresh()
+      pairs.fetchPairs()
+      friends.fetchFriends()
     })
 
     const today = new Date().toISOString().split('T')[0]

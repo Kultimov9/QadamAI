@@ -9,6 +9,8 @@ const NUDGE_COOLDOWN_MS = 2 * 60 * 60 * 1000 // не чаще 1 раза в 2 ч
 // Realtime-каналы живут вне state (не сериализуются).
 let nudgeChannel = null
 let inviteChannel = null
+// Схлопывает параллельные fetchPairs (переход между экранами + realtime).
+let fetchPromise = null
 
 // Код приглашения: 8 символов A-Z0-9 (без спецсимволов и регистра — безопасно
 // для ссылок и парсинга). Если у колонки invite_code есть своя генерация в БД —
@@ -153,6 +155,14 @@ export const usePairsStore = defineStore('pairs', {
 
   actions: {
     async fetchPairs() {
+      if (fetchPromise) return fetchPromise
+      fetchPromise = this._fetchPairs().finally(() => {
+        fetchPromise = null
+      })
+      return fetchPromise
+    },
+
+    async _fetchPairs() {
       const {
         data: { user },
       } = await supabase.auth.getUser()
@@ -421,13 +431,72 @@ export const usePairsStore = defineStore('pairs', {
             filter: `invited_user=eq.${user.id}`,
           },
           async (payload) => {
+            // Новая пара: ника создателя ещё нет в partnerNames, поэтому
+            // подтягиваем список целиком (вызов дедуплицирован).
             await this.fetchPairs()
             const row = payload.new
             const fromName = this.partnerNames[row.creator_id]?.username || 'Друг'
             onInvite?.({ habitName: row.habit_name || 'привычку', fromName })
           },
         )
+        // Статус приглашения поменялся (приняли/отклонили с другого устройства).
+        .on(
+          'postgres_changes',
+          {
+            event: 'UPDATE',
+            schema: 'public',
+            table: 'habit_pairs',
+            filter: `invited_user=eq.${user.id}`,
+          },
+          ({ new: row }) => this.patchPair(row),
+        )
+        // Пары, где я уже партнёр. Фильтры Supabase не умеют OR, поэтому это
+        // отдельная подписка, а не условие в предыдущей.
+        .on(
+          'postgres_changes',
+          {
+            event: 'UPDATE',
+            schema: 'public',
+            table: 'habit_pairs',
+            filter: `partner_id=eq.${user.id}`,
+          },
+          ({ new: row }) => this.patchPair(row),
+        )
+        // Отметки в парах. Фильтр не умеет IN (список пар), поэтому подписка без
+        // фильтра: RLS уже отдаёт только строки моих пар, а лишнее (если пара
+        // ещё не подгружена) отсекаем в patchCompletion.
+        .on(
+          'postgres_changes',
+          { event: 'INSERT', schema: 'public', table: 'pair_completions' },
+          ({ new: row }) => this.patchCompletion(row),
+        )
         .subscribe()
+    },
+
+    // Локальные патчи по realtime — без полной перезагрузки.
+    patchPair(row) {
+      if (!row?.id) return
+      const idx = this.pairs.findIndex((p) => p.id === row.id)
+      if (idx === -1) {
+        this.fetchPairs()
+        return
+      }
+      // completions хранятся рядом с парой и в payload не приходят — сохраняем.
+      this.pairs[idx] = { ...this.pairs[idx], ...row, completions: this.pairs[idx].completions }
+    },
+
+    patchCompletion(row) {
+      if (!row?.pair_id) return
+      const pair = this.pairs.find((p) => p.id === row.pair_id)
+      if (!pair) return
+      const dup = pair.completions.some(
+        (c) => c.user_id === row.user_id && c.date === row.date,
+      )
+      if (dup) return
+      pair.completions = [
+        ...pair.completions,
+        { pair_id: row.pair_id, user_id: row.user_id, date: row.date, created_at: row.created_at },
+      ]
     },
 
     unsubscribePairInvites() {

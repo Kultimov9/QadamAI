@@ -29,9 +29,12 @@
         <p class="greeting">{{ greeting }}</p>
         <button class="profile-chip" @click="router.push('/profile')">
           <span class="nick">{{ displayName }}</span>
-          <span class="avatar" :class="{ img: store.avatarUrl }">
-            <img v-if="store.avatarUrl" :src="store.avatarUrl" alt="" />
-            <span v-else>{{ avatarLetter }}</span>
+          <span class="avatar-wrap">
+            <span class="avatar" :class="{ img: store.avatarUrl }">
+              <img v-if="store.avatarUrl" :src="store.avatarUrl" alt="" />
+              <span v-else>{{ avatarLetter }}</span>
+            </span>
+            <span v-if="store.pendingCount" class="badge">{{ store.pendingCount }}</span>
           </span>
         </button>
       </div>
@@ -111,6 +114,7 @@
 import { computed, ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useHabitsStore } from '../stores/habits'
+import { useScreenRefresh } from '../composables/useScreenRefresh'
 import HeatMap from '../components/HeatMap.vue'
 import { generateGreeting } from '../composables/useAI'
 import { scheduleEveningReminder } from '../composables/useNotifications'
@@ -119,6 +123,9 @@ import logoUrl from '@/assets/logo-wordmark.png'
 
 const router = useRouter()
 const store = useHabitsStore()
+
+// Данные могли измениться на другом устройстве — обновляем при каждом входе.
+useScreenRefresh(() => store.refresh())
 
 const pendingHabits = computed(() => store.todayPending)
 const startableHabits = computed(() => store.todayStartable)
@@ -418,6 +425,33 @@ const challengeProgress = computed(() => {
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+/* Обёртка нужна, чтобы бейдж позиционировался от аватара: у самого аватара
+   overflow: hidden, внутри него бейдж обрезался бы по краю круга. */
+.avatar-wrap {
+  position: relative;
+  display: inline-flex;
+  flex-shrink: 0;
+}
+.avatar-wrap .badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: #ff4444;
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* Обводка цветом фона экрана — иначе точка сливается с краем аватара. */
+  border: 2px solid #0a0a0a;
+  box-sizing: content-box;
 }
 .title {
   font-size: 26px;

@@ -59,6 +59,7 @@ import { Users } from 'lucide-vue-next'
 import { useHabitsStore } from '../stores/habits'
 import { useFriendsStore } from '../stores/friends'
 import { logEvent } from '../composables/useAnalytics'
+import { useScreenRefresh } from '../composables/useScreenRefresh'
 
 const router = useRouter()
 const store = useHabitsStore()
@@ -75,10 +76,12 @@ const avatarLetter = computed(() =>
   (store.username || store.email || '?').charAt(0).toUpperCase(),
 )
 
-onMounted(() => {
-  logEvent('profile_opened', {})
+useScreenRefresh(() => {
+  store.refresh()
   friends.fetchFriends()
 })
+
+onMounted(() => logEvent('profile_opened', {}))
 
 async function pickAvatar() {
   if (uploading.value) return
@@ -287,14 +290,15 @@ async function logout() {
   gap: 8px;
 }
 .badge {
-  min-width: 20px;
-  height: 20px;
-  padding: 0 6px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
   border-radius: 999px;
-  background: #f5f0e8;
-  color: #0a0a0a;
-  font-size: 12px;
+  background: #ff4444;
+  color: #ffffff;
+  font-size: 11px;
   font-weight: 700;
+  line-height: 1;
   display: flex;
   align-items: center;
   justify-content: center;

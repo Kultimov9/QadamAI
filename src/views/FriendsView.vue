@@ -90,6 +90,7 @@ import { Users } from 'lucide-vue-next'
 import { useFriendsStore } from '../stores/friends'
 import { pendingPairFriend } from '../composables/uiState'
 import { requestPushPermissionOnce } from '../composables/usePush'
+import { useScreenRefresh } from '../composables/useScreenRefresh'
 
 const router = useRouter()
 const store = useFriendsStore()
@@ -98,8 +99,10 @@ const query = ref('')
 const searching = ref(false)
 let debounce = null
 
+// Заявки могли прийти, пока экран был закрыт — обновляем при каждом входе.
+useScreenRefresh(() => store.fetchFriends())
+
 onMounted(() => {
-  store.fetchFriends()
   // Догоняющий запрос для тех, кто прошёл онбординг до появления пушей: у них
   // finish() уже не вызовется. Экран «Друзья» — уместный контекст: именно
   // сюда приходят заявки и приглашения. Спрашивается один раз.
