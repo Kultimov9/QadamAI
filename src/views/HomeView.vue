@@ -304,7 +304,7 @@ const challengeProgress = computed(() => {
 
 <style scoped>
 .home {
-  padding: max(80px, env(safe-area-inset-top) + 24px) 24px 100px;
+  padding: var(--home-top) 24px 100px;
   display: flex;
   flex-direction: column;
   gap: 10px;

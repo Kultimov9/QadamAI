@@ -598,7 +598,7 @@ function formatDate(dateStr) {
   position: sticky;
   top: 0;
   background: #0a0a0a;
-  padding-top: max(env(safe-area-inset-top), 54px);
+  padding-top: var(--safe-top);
   padding-left: 24px;
   padding-right: 24px;
   padding-bottom: 12px;

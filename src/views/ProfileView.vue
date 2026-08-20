@@ -137,7 +137,7 @@ async function logout() {
   position: sticky;
   top: 0;
   background: #0a0a0a;
-  padding: max(env(safe-area-inset-top), 54px) 24px 12px;
+  padding: var(--safe-top) 24px 12px;
   z-index: 10;
   display: grid;
   grid-template-columns: 1fr auto 1fr;

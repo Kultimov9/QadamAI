@@ -331,8 +331,7 @@ function moodEmoji(value) {
   position: sticky;
   top: 0;
   background: #0a0a0a;
-  padding: env(safe-area-inset-top) 24px 12px;
-  padding-top: max(env(safe-area-inset-top), 54px);
+  padding: var(--safe-top) 24px 12px;
   z-index: 10;
 }
 .content {

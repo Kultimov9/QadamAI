@@ -43,13 +43,30 @@ select {
     sans-serif;
 }
 
+/* Верхние отступы зависят от платформы.
+   На iOS webview уходит под статус-бар, поэтому нужен большой отступ. Значения
+   заданы константами, а не через env(): в index.html нет viewport-fit=cover,
+   и env(safe-area-inset-top) там всегда 0.
+   На Android Capacitor держит webview ниже статус-бара — те же константы давали
+   пустую полосу сверху на всех экранах. */
+:root {
+  --safe-top: max(env(safe-area-inset-top), 54px);
+  --page-top: max(60px, calc(env(safe-area-inset-top) + 16px));
+  --home-top: max(80px, calc(env(safe-area-inset-top) + 24px));
+}
+html.platform-android {
+  --safe-top: calc(env(safe-area-inset-top) + 12px);
+  --page-top: calc(env(safe-area-inset-top) + 16px);
+  --home-top: calc(env(safe-area-inset-top) + 24px);
+}
+
 .home,
 .tasks-view,
 .habits-view,
 .ai-view,
 .reflection-view,
 .progress-view {
-  padding-top: max(60px, env(safe-area-inset-top) + 16px);
+  padding-top: var(--page-top);
 }
 
 #app {
