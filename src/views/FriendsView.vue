@@ -34,6 +34,9 @@
             <button class="icon-btn" title="Создать общую привычку" @click="createWith(f)">
               <Users :size="18" />
             </button>
+            <button class="icon-btn danger" title="Удалить из друзей" @click="askRemove(f)">
+              <UserMinus :size="18" />
+            </button>
           </div>
         </div>
         <p v-else class="empty">
@@ -80,13 +83,32 @@
         </template>
       </div>
     </div>
+
+    <!-- Подтверждение удаления: явно говорим, что именно произойдёт -->
+    <div v-if="friendToRemove" class="modal-overlay" @click="closeRemove">
+      <div class="modal" @click.stop>
+        <p class="modal-title">Удалить из друзей?</p>
+        <p class="modal-desc">
+          <b>{{ friendToRemove.username || 'Этот пользователь' }}</b> пропадёт из твоего списка
+          друзей, а ты — из его. Общие привычки останутся: их нужно удалять отдельно.
+          Позже сможешь добавить друг друга снова.
+        </p>
+        <p v-if="removeError" class="modal-error">{{ removeError }}</p>
+        <div class="modal-actions">
+          <button class="modal-cancel" :disabled="removing" @click="closeRemove">Отмена</button>
+          <button class="modal-confirm" :disabled="removing" @click="confirmRemove">
+            {{ removing ? 'Удаляем…' : 'Удалить' }}
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup>
 import { ref, watch, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { Users } from 'lucide-vue-next'
+import { Users, UserMinus } from 'lucide-vue-next'
 import { useFriendsStore } from '../stores/friends'
 import { pendingPairFriend } from '../composables/uiState'
 import { requestPushPermissionOnce } from '../composables/usePush'
@@ -148,6 +170,34 @@ async function add(id) {
 function createWith(friend) {
   pendingPairFriend.value = { id: friend.other_id, username: friend.username }
   router.push('/habits')
+}
+
+// === Удаление из друзей ===
+const friendToRemove = ref(null)
+const removing = ref(false)
+const removeError = ref('')
+
+function askRemove(friend) {
+  removeError.value = ''
+  friendToRemove.value = friend
+}
+
+function closeRemove() {
+  if (removing.value) return
+  friendToRemove.value = null
+  removeError.value = ''
+}
+
+async function confirmRemove() {
+  removing.value = true
+  const res = await store.removeFriend(friendToRemove.value?.friendship_id)
+  removing.value = false
+  if (res.ok) {
+    friendToRemove.value = null
+    return
+  }
+  // Оставляем окно открытым: иначе непонятно, почему друг остался в списке.
+  removeError.value = res.error
 }
 </script>
 
@@ -297,5 +347,78 @@ function createWith(friend) {
   font-size: 13px;
   line-height: 1.5;
   margin: 8px 0 0;
+}
+
+/* Удаление — единственное необратимое действие на экране, поэтому иконка
+   выделена цветом, а не спрятана в общий монохром. */
+.icon-btn.danger {
+  color: #ff4444;
+  border-color: #3a2020;
+}
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  z-index: 100;
+}
+.modal {
+  background: #141414;
+  border: 1px solid #242424;
+  border-radius: 18px;
+  padding: 22px;
+  width: 100%;
+  max-width: 340px;
+}
+.modal-title {
+  font-size: 17px;
+  font-weight: 600;
+  color: #ffffff;
+  margin: 0 0 10px;
+}
+.modal-desc {
+  font-size: 14px;
+  line-height: 1.5;
+  color: #9a9a92;
+  margin: 0 0 18px;
+}
+.modal-desc b {
+  color: #f5f0e8;
+}
+.modal-error {
+  font-size: 13px;
+  line-height: 1.45;
+  color: #ff4444;
+  margin: 0 0 14px;
+}
+.modal-actions {
+  display: flex;
+  gap: 10px;
+}
+.modal-cancel,
+.modal-confirm {
+  flex: 1;
+  padding: 12px 0;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.modal-cancel {
+  background: transparent;
+  border: 1px solid #2a2a2a;
+  color: #9a9a92;
+}
+.modal-confirm {
+  background: #ff4444;
+  border: none;
+  color: #ffffff;
+}
+.modal-cancel:disabled,
+.modal-confirm:disabled {
+  opacity: 0.6;
 }
 </style>

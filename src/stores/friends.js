@@ -118,6 +118,36 @@ export const useFriendsStore = defineStore('friends', {
       logEvent('friend_request_declined', { friendship_id: friendshipId })
     },
 
+    // Удаление из друзей. Строка удаляется целиком, поэтому дружба пропадает
+    // сразу у обоих. Парные привычки живут в другой таблице и остаются.
+    async removeFriend(friendshipId) {
+      if (!friendshipId) return { ok: false, error: 'Не найден идентификатор дружбы.' }
+
+      // .select() возвращает удалённые строки. Без него RLS, запретившая
+      // удаление, выглядит как успех: ошибки нет, но строка на месте — и друг
+      // возвращается в список при следующем обновлении.
+      const { data, error } = await supabase
+        .from('friendships')
+        .delete()
+        .eq('id', friendshipId)
+        .select('id')
+
+      if (error) {
+        console.error('removeFriend error:', error)
+        return { ok: false, error: error.message }
+      }
+      if (!data?.length) {
+        return {
+          ok: false,
+          error: 'Не удалось удалить: нет прав на это действие в базе.',
+        }
+      }
+
+      this.list = this.list.filter((f) => f.friendship_id !== friendshipId)
+      logEvent('friend_removed', { friendship_id: friendshipId })
+      return { ok: true }
+    },
+
     // Локальный патч по событию realtime — без полной перезагрузки списка.
     patchFriendship(row) {
       if (!row?.id) return
