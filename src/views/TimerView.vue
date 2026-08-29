@@ -43,6 +43,7 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useHabitsStore } from '../stores/habits'
+import { supabase } from '../lib/supabase'
 import { logEvent } from '../composables/useAnalytics'
 
 const router = useRouter()
@@ -50,7 +51,17 @@ const route = useRoute()
 const store = useHabitsStore()
 
 const habit = computed(() => store.habits.find((h) => h.id === route.params.id))
-const totalSeconds = computed(() => (habit.value?.duration || 5) * 60)
+
+// Переход из пуша-возвращения: ?min=N задаёт уменьшенную планку, ?re=<id> —
+// строку в reengagement_log, которую надо отметить открытой.
+const reengageId = computed(() => route.query.re || null)
+const overrideMinutes = computed(() => {
+  const m = Number(route.query.min)
+  return Number.isFinite(m) && m > 0 && m <= 180 ? m : null
+})
+const totalSeconds = computed(
+  () => (overrideMinutes.value || habit.value?.duration || 5) * 60,
+)
 
 const secondsLeft = ref(totalSeconds.value)
 const started = ref(false)
@@ -63,6 +74,8 @@ let elapsed = 0
 // лежит в сторе и привязано к метке старта, поэтому время «идёт» даже пока
 // экран был закрыт. Восстанавливаем только сегодняшний таймер этой привычки.
 onMounted(() => {
+  markReengageOpened()
+
   const saved = store.activeTimer
   if (!saved || saved.habitId !== route.params.id) return
   if (new Date(saved.startedAt).toDateString() !== new Date().toDateString()) {
@@ -153,9 +166,31 @@ function resume() {
   tick()
 }
 
+// Пришли из пуша-возвращения: отмечаем открытие. По этому флагу функция решает,
+// не пора ли выдержать паузу — два проигнорированных пуша подряд её включают.
+async function markReengageOpened() {
+  if (!reengageId.value) return
+  logEvent('reengage_opened', { habitId: route.params.id, minutes: overrideMinutes.value })
+  try {
+    await supabase
+      .from('reengagement_log')
+      .update({ opened: true })
+      .eq('id', reengageId.value)
+  } catch (e) {
+    console.log('reengage opened update error:', e)
+  }
+}
+
 function complete() {
   store.activeTimer = null
   logEvent('timer_completed', { habitId: route.params.id, name: habit.value?.name })
+  // Человек не просто открыл пуш, а досидел таймер — самый ценный сигнал.
+  if (reengageId.value) {
+    logEvent('reengage_completed', {
+      habitId: route.params.id,
+      minutes: overrideMinutes.value,
+    })
+  }
   store.completeHabit(habit.value.id)
   router.replace('/')
 }

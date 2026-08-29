@@ -72,7 +72,14 @@ onMounted(async () => {
     // запрашиваем — только в конце онбординга и на экране «Друзья».
     initPush({
       onOpen: (data) => {
-        if (data?.screen === 'friends') router.push('/friends')
+        // Возвращение: ведём сразу в таймер с уменьшенной длительностью, чтобы
+        // от пуша до начала действия был один тап, без экрана выбора.
+        if (data?.screen === 'reengage' && data.habit_id) {
+          router.push({
+            path: `/timer/${data.habit_id}`,
+            query: { min: String(data.minutes || ''), re: String(data.log_id || '') },
+          })
+        } else if (data?.screen === 'friends') router.push('/friends')
         else if (data?.screen === 'pair') router.push('/habits')
       },
     })
