@@ -284,9 +284,28 @@ export const useHabitsStore = defineStore('habits', {
     async removeHabit(id) {
       const removed = this.habits.find((h) => h.id === id)
       this.habits = this.habits.filter((h) => h.id !== id)
+      this.dropNotificationsAbout({ habitId: id, name: removed?.name })
       logEvent('habit_deleted', { id, name: removed?.name })
       const { error } = await supabase.from('habits').delete().eq('id', id)
       if (error) console.error('removeHabit error:', error)
+    },
+
+    // Убирает запланированные AI-уведомления о предмете, который только что
+    // удалили. Без этого пуш придёт по расписанию: уведомления планируются с
+    // repeats: true и живут до следующего запуска приложения.
+    dropNotificationsAbout({ habitId = null, goalId = null, name = null }) {
+      const norm = (v) => String(v || '').toLowerCase().trim()
+      const isAbout = (n) =>
+        (habitId && (n.habitId === habitId || (!n.habitId && norm(n.habit) === norm(name)))) ||
+        (goalId && (n.goalId === goalId || (!n.goalId && norm(n.goal) === norm(name))))
+
+      const doomed = this.customNotifications.filter(isAbout)
+      if (!doomed.length) return
+      this.customNotifications = this.customNotifications.filter((n) => !isAbout(n))
+
+      import('../composables/useNotifications')
+        .then(({ cancelNotificationIds }) => cancelNotificationIds(doomed.map((n) => n.id)))
+        .catch((e) => console.log('cancel notifications error:', e))
     },
 
     // === Задачи ===
@@ -355,7 +374,9 @@ export const useHabitsStore = defineStore('habits', {
     },
 
     async removeGoal(id) {
+      const removed = this.goals.find((g) => g.id === id)
       this.goals = this.goals.filter((g) => g.id !== id)
+      this.dropNotificationsAbout({ goalId: id, name: removed?.title })
       const { error } = await supabase.from('goals').delete().eq('id', id)
       if (error) console.error('removeGoal error:', error)
     },

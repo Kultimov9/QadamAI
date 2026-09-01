@@ -12,6 +12,43 @@ function mentionsHabit(n, habitName) {
   return text.includes(stem)
 }
 
+const norm = (v) => String(v || '').toLowerCase().trim()
+
+// Цель считается достигнутой, когда все её шаги отмечены.
+function goalDone(goal) {
+  const steps = goal?.steps || []
+  return steps.length > 0 && steps.every((s) => s.done)
+}
+
+// Уведомление потеряло смысл: его предмет удалён или уже выполнен.
+//
+// AI-уведомления живут в персистентном сторе и планируются с repeats: true,
+// поэтому без этой проверки пуш про удалённую привычку или достигнутую цель
+// продолжает приходить каждый день. Сверяемся по id — он проставляется при
+// генерации; для уведомлений, сохранённых до этой правки, id нет, и тогда
+// сверяемся по названию.
+export function isObsolete(notification, store, today) {
+  const n = notification
+
+  if (n.habitId || n.habit) {
+    const habit = n.habitId
+      ? store.habits.find((h) => h.id === n.habitId)
+      : store.habits.find((h) => norm(h.name) === norm(n.habit))
+    if (!habit) return true
+    if (habit.completedDates.includes(today)) return true
+  }
+
+  if (n.goalId || n.goal) {
+    const goal = n.goalId
+      ? store.goals.find((g) => g.id === n.goalId)
+      : store.goals.find((g) => norm(g.title) === norm(n.goal))
+    if (!goal) return true
+    if (goalDone(goal)) return true
+  }
+
+  return false
+}
+
 export async function setupNotifications() {
   const store = useHabitsStore()
   const permission = await LocalNotifications.requestPermissions()
@@ -20,9 +57,9 @@ export async function setupNotifications() {
   const allIds = [{ id: 1 }, { id: 2 }, ...store.customNotifications.map((n) => ({ id: n.id }))]
   await LocalNotifications.cancel({ notifications: allIds })
 
-  // Не планируем пуши о привычках, которые сегодня уже выполнены.
   const today = new Date().toISOString().split('T')[0]
   const doneToday = store.habits.filter((h) => h.completedDates.includes(today))
+  // Старый фолбэк по тексту — для уведомлений без привязки к id вообще.
   const isAboutDoneHabit = (n) => doneToday.some((h) => mentionsHabit(n, h.name))
 
   const notifications = [
@@ -47,7 +84,7 @@ export async function setupNotifications() {
       },
     },
     ...store.customNotifications
-      .filter((n) => !isAboutDoneHabit(n))
+      .filter((n) => !isObsolete(n, store, today) && !isAboutDoneHabit(n))
       .map((n) => ({
         id: n.id,
         title: 'Oyan ✨',
@@ -62,6 +99,17 @@ export async function setupNotifications() {
 
   console.log('scheduling notifications:', JSON.stringify(notifications))
   await LocalNotifications.schedule({ notifications })
+}
+
+// Снимает конкретные запланированные уведомления по их id.
+export async function cancelNotificationIds(ids) {
+  const list = (ids || []).filter((id) => id != null).map((id) => ({ id }))
+  if (!list.length) return
+  try {
+    await LocalNotifications.cancel({ notifications: list })
+  } catch (e) {
+    console.log('cancelNotificationIds error:', e)
+  }
 }
 
 // Отменяет сегодняшние запланированные пуши о конкретной привычке — вызывается,

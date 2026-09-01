@@ -392,10 +392,12 @@ export async function generateNotifications() {
 ${lastReflection ? `- Последняя рефлексия (${lastReflection.date}): настроение ${lastReflection.mood}, мешало: ${lastReflection.obstacles?.join(', ') || 'ничего'}, заметка: "${lastReflection.note || ''}"` : '- Рефлексий ещё нет'}
 
 Ответь ТОЛЬКО в формате JSON массива, без лишнего текста.
-Поле "habit" — ТОЧНОЕ название привычки из списка, о которой уведомление, или null, если оно не про конкретную привычку:
+Поле "habit" — ТОЧНОЕ название привычки из списка, о которой уведомление, или null.
+Поле "goal" — ТОЧНОЕ название цели из списка, о которой уведомление, или null.
+Заполняй их обязательно, если уведомление про конкретную привычку или цель:
 [
-  { "hour": 12, "minute": 0, "text": "текст уведомления", "habit": "название привычки или null" },
-  { "hour": 15, "minute": 30, "text": "текст уведомления", "habit": null }
+  { "hour": 12, "minute": 0, "text": "текст уведомления", "habit": "название привычки или null", "goal": null },
+  { "hour": 15, "minute": 30, "text": "текст уведомления", "habit": null, "goal": "название цели или null" }
 ]
 `
 
@@ -420,11 +422,23 @@ ${lastReflection ? `- Последняя рефлексия (${lastReflection.da
   const clean = text.replace(/```json|```/g, '').trim()
   const parsed = JSON.parse(clean)
 
+  // Привязываем уведомление к предмету по id, а не по названию: названия
+  // совпадают нечётко (падежи, переименование), а по id сразу видно, что
+  // привычка или цель удалена — и такое уведомление больше не планируется.
+  const norm = (v) => String(v || '').toLowerCase().trim()
+  const habitId = (name) =>
+    store.habits.find((h) => norm(h.name) === norm(name))?.id || null
+  const goalId = (title) =>
+    store.goals.find((g) => norm(g.title) === norm(title))?.id || null
+
   return parsed.map((n, i) => ({
     id: 100 + i,
     hour: n.hour,
     minute: n.minute || 0,
     text: n.text,
     habit: n.habit || null,
+    habitId: habitId(n.habit),
+    goal: n.goal || null,
+    goalId: goalId(n.goal),
   }))
 }
