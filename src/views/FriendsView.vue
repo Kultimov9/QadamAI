@@ -26,11 +26,14 @@
         <p class="section-label">Мои друзья</p>
         <div v-if="store.friends.length">
           <div class="row" v-for="f in store.friends" :key="f.other_id">
-            <span class="avatar" :class="{ img: f.avatar_url }">
-              <img v-if="f.avatar_url" :src="f.avatar_url" alt="" />
-              <span v-else>{{ initial(f.username) }}</span>
-            </span>
-            <span class="name">{{ f.username || 'Без ника' }}</span>
+            <!-- Аватар и ник ведут в профиль; кнопки справа — свои действия -->
+            <button class="row-open" @click="openProfile(f)">
+              <span class="avatar" :class="{ img: f.avatar_url }">
+                <img v-if="f.avatar_url" :src="f.avatar_url" alt="" />
+                <span v-else>{{ initial(f.username) }}</span>
+              </span>
+              <span class="name">{{ f.username || 'Без ника' }}</span>
+            </button>
             <button class="icon-btn" title="Создать общую привычку" @click="createWith(f)">
               <Users :size="18" />
             </button>
@@ -167,6 +170,10 @@ async function add(id) {
   await store.sendRequest(id)
 }
 
+function openProfile(friend) {
+  router.push(`/friend/${friend.other_id}`)
+}
+
 function createWith(friend) {
   pendingPairFriend.value = { id: friend.other_id, username: friend.username }
   router.push('/habits')
@@ -270,6 +277,19 @@ async function confirmRemove() {
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+/* Кликабельная зона перехода в профиль: занимает всё до кнопок справа */
+.row-open {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  text-align: left;
 }
 .name {
   flex: 1;

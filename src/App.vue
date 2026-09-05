@@ -31,8 +31,12 @@ const router = useRouter()
 // Не чаще раза в 30 секунд на возврат из фона.
 const RESUME_THROTTLE_MS = 30_000
 
-const hideNav = computed(() =>
-  ['/onboarding', '/auth', '/profile', '/friends'].includes(route.path),
+// Подэкраны без таб-бара. Профиль друга — с параметром в пути, поэтому
+// проверяется префиксом, а не точным совпадением.
+const hideNav = computed(
+  () =>
+    ['/onboarding', '/auth', '/profile', '/friends'].includes(route.path) ||
+    route.path.startsWith('/friend/'),
 )
 
 // Deep-link приёма парной привычки: oyan://join/CODE (или https .../join/CODE).

@@ -38,6 +38,15 @@
                 <p class="name">{{ habit.name }}</p>
                 <p class="duration">{{ habit.duration }} мин</p>
               </div>
+              <button
+                class="vis-btn"
+                :class="{ on: habit.isPublic }"
+                :title="habit.isPublic ? 'Видно друзьям' : 'Видно только тебе'"
+                @click.stop="toggleVisibility(habit)"
+              >
+                <Eye v-if="habit.isPublic" :size="16" />
+                <Lock v-else :size="16" />
+              </button>
               <button class="delete-btn" @click.stop="confirmDelete(habit)">
                 <Trash2 :size="16" />
               </button>
@@ -54,6 +63,15 @@
                 <p class="name">{{ habit.name }}</p>
                 <p class="streak">🔥 {{ habit.streak }} дней подряд</p>
               </div>
+              <button
+                class="vis-btn"
+                :class="{ on: habit.isPublic }"
+                :title="habit.isPublic ? 'Видно друзьям' : 'Видно только тебе'"
+                @click.stop="toggleVisibility(habit)"
+              >
+                <Eye v-if="habit.isPublic" :size="16" />
+                <Lock v-else :size="16" />
+              </button>
               <button class="delete-btn" @click.stop="confirmDelete(habit)">
                 <Trash2 :size="16" />
               </button>
@@ -91,6 +109,11 @@
               <label class="duration-label">Минут: {{ newDuration }}</label>
               <input v-model="newDuration" type="range" min="1" max="60" class="slider" />
             </div>
+            <div class="pair-toggle-row" @click="newIsPublic = !newIsPublic">
+              <span class="pair-toggle-label">Видно друзьям</span>
+              <span class="pair-toggle" :class="{ on: newIsPublic }"><span class="knob" /></span>
+            </div>
+
             <div class="pair-toggle-row" @click="pairMode = !pairMode">
               <span class="pair-toggle-label">Парная привычка (с другом)</span>
               <span class="pair-toggle" :class="{ on: pairMode }"><span class="knob" /></span>
@@ -243,6 +266,20 @@
         </div>
       </div>
 
+      <!-- Пояснение при первом открытии привычки друзьям -->
+      <div v-if="showVisibilityHint" class="modal-overlay" @click="showVisibilityHint = false">
+        <div class="modal" @click.stop>
+          <p class="modal-title">Видно друзьям</p>
+          <p class="modal-desc">
+            Друзья увидят эту привычку и твой прогресс по ней. Остальные привычки, задачи,
+            цели и рефлексии остаются только твоими.
+          </p>
+          <div class="modal-actions">
+            <button class="modal-confirm alt" @click="showVisibilityHint = false">Понятно</button>
+          </div>
+        </div>
+      </div>
+
       <!-- Модалка приглашения после создания парной привычки -->
       <div v-if="inviteCode" class="modal-overlay" @click="closeInvite">
         <div class="modal" @click.stop>
@@ -272,7 +309,7 @@ import { setupNotifications } from '../composables/useNotifications'
 import { shareInvite, copyText, inviteLink } from '../composables/share'
 import { pendingPairFriend } from '../composables/uiState'
 import { useScreenRefresh } from '../composables/useScreenRefresh'
-import { Trash2 } from 'lucide-vue-next'
+import { Trash2, Eye, Lock } from 'lucide-vue-next'
 import ProgressChart from '../components/ProgressChart.vue'
 import PairHabits from '../components/PairHabits.vue'
 
@@ -328,6 +365,28 @@ function doShare() {
 const pendingHabits = computed(() => store.todayPending)
 const completedHabits = computed(() => store.todayCompleted)
 
+// Видимость для друзей. По умолчанию выключено — приватность не должна
+// включаться сама.
+const VIS_HINT_KEY = 'oyan-visibility-hint'
+const newIsPublic = ref(false)
+const showVisibilityHint = ref(false)
+
+async function toggleVisibility(habit) {
+  const next = !habit.isPublic
+  // Пояснение показываем один раз и только при открытии, не при скрытии.
+  if (next) {
+    try {
+      if (!localStorage.getItem(VIS_HINT_KEY)) {
+        showVisibilityHint.value = true
+        localStorage.setItem(VIS_HINT_KEY, '1')
+      }
+    } catch {
+      // приватный режим — просто не запомним, что подсказку уже показывали
+    }
+  }
+  await store.setHabitVisibility(habit.id, next)
+}
+
 const newEmoji = ref('⭐')
 const newName = ref('')
 const newDuration = ref(5)
@@ -367,7 +426,7 @@ async function addHabit() {
     const code = await pairsStore.createPair(name, newEmoji.value, Number(newDuration.value))
     if (code) inviteCode.value = code
   } else {
-    store.addHabit(name, newEmoji.value, Number(newDuration.value))
+    store.addHabit(name, newEmoji.value, Number(newDuration.value), newIsPublic.value)
   }
 
   newName.value = ''
@@ -375,6 +434,7 @@ async function addHabit() {
   newDuration.value = 5
   showEmojiPicker.value = false
   pairMode.value = false
+  newIsPublic.value = false
   selectedFriendId.value = null
 }
 
@@ -531,6 +591,20 @@ function habitProgress(count) {
   align-items: center;
 }
 .delete-btn:active {
+  color: #9a9a92;
+}
+/* Переключатель видимости: тихий, не спорит за внимание с самой привычкой.
+   Открытая привычка подсвечивается, закрытая остаётся приглушённой. */
+.vis-btn {
+  background: none;
+  border: none;
+  color: #5a5a55;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+}
+.vis-btn.on {
   color: #9a9a92;
 }
 .add-form {

@@ -99,6 +99,7 @@ export const useHabitsStore = defineStore('habits', {
         duration: h.duration,
         streak: h.streak,
         completedDates: h.completed_dates || [],
+        isPublic: h.is_public || false,
       }))
       this.tasks = (tasksRes.data || []).map((t) => ({
         id: t.id,
@@ -234,9 +235,17 @@ export const useHabitsStore = defineStore('habits', {
     },
 
     // === Привычки ===
-    async addHabit(name, emoji, duration) {
+    async addHabit(name, emoji, duration, isPublic = false) {
       const id = crypto.randomUUID()
-      this.habits.push({ id, name, emoji, duration, streak: 0, completedDates: [] })
+      this.habits.push({
+        id,
+        name,
+        emoji,
+        duration,
+        streak: 0,
+        completedDates: [],
+        isPublic,
+      })
       logEvent('habit_created', { id, name })
       const { error } = await supabase.from('habits').insert({
         id,
@@ -246,6 +255,7 @@ export const useHabitsStore = defineStore('habits', {
         duration,
         streak: 0,
         completed_dates: [],
+        is_public: isPublic,
       })
       if (error) console.error('addHabit error:', error)
     },
@@ -288,6 +298,28 @@ export const useHabitsStore = defineStore('habits', {
       logEvent('habit_deleted', { id, name: removed?.name })
       const { error } = await supabase.from('habits').delete().eq('id', id)
       if (error) console.error('removeHabit error:', error)
+    },
+
+    // Видна ли привычка друзьям. Оптимистично переключаем локально, при ошибке
+    // возвращаем как было — иначе иконка соврёт про реальную приватность.
+    async setHabitVisibility(id, isPublic) {
+      const habit = this.habits.find((h) => h.id === id)
+      if (!habit) return { ok: false }
+      const before = habit.isPublic
+      habit.isPublic = isPublic
+      logEvent('habit_visibility_changed', { habit_id: id, is_public: isPublic })
+
+      const { error } = await supabase
+        .from('habits')
+        .update({ is_public: isPublic })
+        .eq('id', id)
+
+      if (error) {
+        habit.isPublic = before
+        console.error('setHabitVisibility error:', error)
+        return { ok: false, error: error.message }
+      }
+      return { ok: true }
     },
 
     // Убирает запланированные AI-уведомления о предмете, который только что
